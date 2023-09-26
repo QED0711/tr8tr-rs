@@ -1,20 +1,21 @@
+use std::collections::HashMap;
 use polars::df;
 use polars::prelude::*;
 
-pub struct Args {}
+pub type Args = HashMap<String, Box<dyn std::any::Any>>;
 
-type FailedTransformationErr = String;
+pub type FailedTransformationErr = String;
 
-type ExecutorFn = fn(DataFrame, Args) -> Result<DataFrame, FailedTransformationErr>;
+pub type ExecutorFn = fn(&DataFrame, Args) -> Result<&DataFrame, FailedTransformationErr>;
 
 #[derive(Debug)]
 pub struct DataTransformer {
     pub name: String,
-    pub executor: Option<ExecutorFn>, 
+    pub executor: ExecutorFn, 
 }
 
 impl DataTransformer {
-    pub fn new(name: String) -> DataTransformer {
-        return DataTransformer{name: name, executor: None}
+    pub fn new(name: String, executor: ExecutorFn) -> DataTransformer {
+        return DataTransformer{name: name, executor: executor}
     }
 }
