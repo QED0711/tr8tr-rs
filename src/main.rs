@@ -12,19 +12,24 @@ fn main() {
     asset.display();
 
     let mut args = Args::new();
-    args.insert("out_col".into(), Box::new("ma_50".to_string()));
-    args.insert("period".into(), Box::new(50));
+    args.insert("out_col".into(), "ma_50".to_string());
+    // args.insert("period".into(), Box::new(50));
 
-    fn test_handler(df: &DataFrame, args: Args) -> Result<&DataFrame, FailedTransformationErr> {
-        let out_col: String = if args.contains_key("out_col") {args["out_col"]} else {"moving_average".to_string()};
-        println!("{}", out_col);
-        return Ok(df)
+    fn test_handler(df: &DataFrame, args: &Args) -> Result<DataFrame, FailedTransformationErr> {
+        let out_col: String = args.get("out_col", "ma".to_string());
+        let period: usize = args.get("period", 50);
+        println!("out_col: {}", out_col);
+        println!("period: {}", period);
+        return Ok(df.clone())
     }
 
+    let transformer = DataTransformer::new("test1".into(), test_handler, Some(args));
     asset.set_transformers(vec![
-        DataTransformer::new("test1".into(), test_handler),
+        transformer,
     ]);
 
     asset.list_transformers();
+    let new_df = transformer.apply(&asset.df.unwrap());
+    println!("{:?}", new_df);
 
 }

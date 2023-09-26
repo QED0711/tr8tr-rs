@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cargo build && ./target/debug/tr8tr
+RUSTFLAGS="-A warnings" cargo build && ./target/debug/tr8tr
