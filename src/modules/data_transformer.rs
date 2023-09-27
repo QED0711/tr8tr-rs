@@ -33,7 +33,7 @@ impl Args {
     }
 }
 
-pub type FailedTransformationErr = String;
+pub type FailedTransformationErr = polars::error::PolarsError;
 // ExecutorFn must return a new (owned) DataFrame object to avoid lifetime issues
 pub type ExecutorFn = fn(&DataFrame, &Args) -> Result<DataFrame, FailedTransformationErr>;
 

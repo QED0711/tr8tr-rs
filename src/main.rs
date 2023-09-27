@@ -18,18 +18,17 @@ fn main() {
     fn test_handler(df: &DataFrame, args: &Args) -> Result<DataFrame, FailedTransformationErr> {
         let in_col: String = args.get("in_col", "close".to_string());
         let out_col: String = args.get("out_col", "ma".to_string());
-        let period: usize = args.get("period", 50);
+        let period: i64 = args.get("period", 50);
 
-        // println!("out_col: {}", out_col);
-        // println!("period: {}", period);
+        let mut options = RollingOptionsImpl::default();
+        options.window_size = Duration::parse(format!("{}i", period).as_str()); // string format "{period}i" indicates how many periods to run the window over
 
-        let ma = df.column(in_col)?
-            .rolling_window(period, &|s| s.mean().unwrap())
-            .unwrap()
-            .into_series();
+        let ma = df.column(&in_col)?
+            .rolling_mean(options)?;
 
         // Add the new moving average column to the DataFrame
-        let working_df = df.with_column(ma.rename(&out_col))?;
+        let renamed_ma = ma.clone().rename(out_col.as_str());
+        let working_df = df.with_column(renamed_ma)?;
         Ok(working_df.clone())
     }
 
