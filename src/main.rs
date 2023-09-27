@@ -16,11 +16,21 @@ fn main() {
     // args.insert("period".into(), Box::new(50));
 
     fn test_handler(df: &DataFrame, args: &Args) -> Result<DataFrame, FailedTransformationErr> {
+        let in_col: String = args.get("in_col", "close".to_string());
         let out_col: String = args.get("out_col", "ma".to_string());
         let period: usize = args.get("period", 50);
-        println!("out_col: {}", out_col);
-        println!("period: {}", period);
-        return Ok(df.clone())
+
+        // println!("out_col: {}", out_col);
+        // println!("period: {}", period);
+
+        let ma = df.column(in_col)?
+            .rolling_window(period, &|s| s.mean().unwrap())
+            .unwrap()
+            .into_series();
+
+        // Add the new moving average column to the DataFrame
+        let working_df = df.with_column(ma.rename(&out_col))?;
+        Ok(working_df.clone())
     }
 
     let transformer = DataTransformer::new("test1".into(), test_handler, Some(args));
@@ -28,8 +38,9 @@ fn main() {
         transformer,
     ]);
 
-    asset.list_transformers();
-    let new_df = transformer.apply(&asset.df.unwrap());
-    println!("{:?}", new_df);
+    // asset.list_transformers();
+    // let new_df = transformer.apply(&asset.df.unwrap());
+    asset.apply_transformers();
+    // println!("{:?}", new_df);
 
 }
