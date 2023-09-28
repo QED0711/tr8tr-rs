@@ -1,4 +1,3 @@
-use polars::df;
 use polars::prelude::*;
 
 // mod modules;
