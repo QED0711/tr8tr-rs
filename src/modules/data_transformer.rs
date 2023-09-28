@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use polars::df;
 use polars::prelude::*;
 
 /* 
@@ -35,7 +34,7 @@ impl Args {
 
 pub type FailedTransformationErr = polars::error::PolarsError;
 // ExecutorFn must return a new (owned) DataFrame object to avoid lifetime issues
-pub type ExecutorFn = fn(&DataFrame, &Args) -> Result<DataFrame, FailedTransformationErr>;
+pub type ExecutorFn = fn(DataFrame, &Args) -> Result<DataFrame, FailedTransformationErr>;
 
 #[derive(Debug)]
 pub struct DataTransformer {
@@ -53,7 +52,7 @@ impl DataTransformer {
         }
     }
 
-    pub fn apply(&self, df: &DataFrame) -> Result<DataFrame, FailedTransformationErr> {
+    pub fn apply(&self, df: DataFrame) -> Result<DataFrame, FailedTransformationErr> {
         (self.executor)(df, &self.args)
     }
 }

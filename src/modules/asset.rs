@@ -59,7 +59,7 @@ impl Asset {
     pub fn apply_transformers(&mut self) {
         let mut transformed_df: DataFrame = self.df.clone().unwrap();
         for transformer in &self.transformers {
-            transformed_df = transformer.apply(&transformed_df).unwrap();
+            transformed_df = transformer.apply(transformed_df).unwrap();
         }
         self.df = Some(transformed_df);
     }
