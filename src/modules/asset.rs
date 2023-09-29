@@ -56,11 +56,15 @@ impl Asset {
     }
 
     pub fn apply_transformers(&mut self) {
-        let mut transformed_df: DataFrame = self.df.clone().unwrap();
+        let mut transformed_lf: LazyFrame = self.df.clone().unwrap().lazy();
         for transformer in &self.transformers {
-            transformed_df = transformer.apply(transformed_df).unwrap();
+            transformed_lf = transformer.apply(transformed_lf).unwrap();
         }
-        self.df = Some(transformed_df);
+        self.df = Some(
+            transformed_lf
+                .collect()
+                .expect("Failed transforation")
+            );
     }
 }
 
