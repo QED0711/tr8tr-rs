@@ -13,6 +13,9 @@ ARG USERNAME=user
 RUN groupadd -g $GID user && \
     useradd -m -u $UID -g $GID -s /bin/bash $USERNAME
 
+RUN usermod -aG sudo $USERNAME
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 WORKDIR /home/$USERNAME/app/
 
 # Copy the Cargo.toml and Cargo.lock to fetch dependencies

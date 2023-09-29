@@ -13,6 +13,8 @@ pub fn SMA(args: Args) -> DataTransformer {
         let mut options = RollingOptions::default();
         options.window_size = Duration::new(period);
         options.min_periods = period as usize;
+        println!("{}, {}, {}", in_col, out_col, period);
+        println!("window_size: {:?}, min_periods: {}", options.window_size, options.min_periods);
 
         let working_lf = lf
             // .clone()
