@@ -2,81 +2,52 @@ mod modules;
 
 use modules::transformers;
 use plotters::prelude::*;
-use polars::prelude::*;
 
 use modules::asset::Asset;
-use modules::data_transformer::{DataTransformer, Args, ExecutorFn, FailedTransformationErr};
+use modules::data_transformer::Args;
+use modules::chart;
 
 fn main() {
 
     // instantiate asset from a csv
     let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
 
-    let mut args_1 = Args::new();
-    args_1.insert("out_col".into(), "sma_50".to_string());
-    args_1.insert("period".into(), 50i64);
+    let mut sma_args = Args::new();
+    sma_args.insert("out_col".into(), "sma_50".to_string());
+    sma_args.insert("period".into(), 50i64);
+    
+    let mut ema_args = Args::new();
+    ema_args.insert("out_col".into(), "ema_50".to_string());
+    ema_args.insert("period".into(), 50i64);
 
-    let mut args_2 = Args::new();
-    args_2.insert("out_col".into(), "sma_100".to_string());
-    args_2.insert("period".into(), 100i64);
+    let mut rsi_args = Args::new();
+    rsi_args.insert("out_col".into(), "rsi");
+    rsi_args.insert("period".into(), 14i64);
 
-    let mut args_3 = Args::new();
-    args_3.insert("out_col".into(), "sma_200".to_string());
-    args_3.insert("period".into(), 200i64);
-
-    let SMA_50 = transformers::moving_averages::SMA(args_1);
-    let SMA_100 = transformers::moving_averages::SMA(args_2);
-    let SMA_200 = transformers::moving_averages::SMA(args_3);
+    let sma_50 = transformers::moving_averages::SMA(sma_args);
+    let ema_50 = transformers::moving_averages::EMA(ema_args);
+    let rsi_14 = transformers::rsi::RSI(rsi_args);
 
     asset.set_transformers(vec![
-        SMA_50,
-        SMA_100,
-        SMA_200,
+        sma_50,
+        ema_50,
+        rsi_14
     ]);
 
     asset.apply_transformers();
 
-    // println!("{:?}", asset.df.unwrap());
-
-    // Plotting test
-    fn plot_columns(df: &DataFrame, col_names: Vec<&str>, colors: Vec<&RGBColor> ) -> Result<(), Box<dyn std::error::Error>> {
-        
-        let root = BitMapBackend::new("plots/plot.png", (800, 600)).into_drawing_area();
-        root.fill(&WHITE).unwrap();
-
-        let mut all_data = vec![];
-
-        for &col_name in &col_names {
-            let series = df.column(col_name)?;
-            let data: Vec<f64> = series.f64()?
-                .into_iter()
-                .filter_map(|opt_val| opt_val)
-                .collect();
-
-            all_data.push(data);
-        }
-
-        let min_y = all_data.iter().flatten().copied().fold(f64::NAN, f64::min);
-        let max_y = all_data.iter().flatten().copied().fold(f64::NAN, f64::max);
-
-        let mut chart = ChartBuilder::on(&root)
-            .build_cartesian_2d(0f64..all_data[0].len() as f64, min_y..max_y)?;
-
-        chart.configure_mesh().draw()?;
-        
-        for (data, color) in all_data.iter().zip(colors.iter()) {
-            chart.draw_series(LineSeries::new(
-                data.iter().enumerate().map(|(idx, value)| (idx as f64, *value)),
-                color
-            ))?;
-        }
-        Ok(())
-    }
     
-    let _ = plot_columns(
-        &asset.df.clone().unwrap().tail(Some(500)), 
-        vec!["close", "sma_50", "sma_100", "sma_200"], 
-        vec![&RED, &BLUE, &GREEN, &YELLOW]
+    let _ = chart::plot_columns(
+        &asset.df.clone().unwrap().tail(Some(1000)), 
+        vec!["close", "sma_50", "ema_50"], 
+        vec![&BLACK, &RED, &BLUE],
+        Some("plots/moving_avgs.png"),
+    );
+    let _ = chart::plot_columns(
+        &asset.df.clone().unwrap().tail(Some(1000)), 
+        vec!["rsi"], 
+        vec![&BLACK],
+        Some("plots/rsi.png"),
     );
     println!("{:?}", asset.df.unwrap());
 

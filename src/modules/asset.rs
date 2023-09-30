@@ -36,10 +36,12 @@ impl Asset {
         a
     }
 
+    #[allow(dead_code)]
     pub fn display(&self) {
         println!("{:?}", self.df);
     }
 
+    #[allow(dead_code)]
     pub fn shape(&self) -> (usize, usize) {
         let shape = self.df.clone().unwrap().shape();
         return shape
@@ -51,6 +53,7 @@ impl Asset {
         self.transformers = transformers;
     }
 
+    #[allow(dead_code)]
     pub fn list_transformers(&self) {
         println!("{:?}", self.transformers);
     }
