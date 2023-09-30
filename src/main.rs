@@ -24,14 +24,18 @@ fn main() {
     rsi_args.insert("out_col".into(), "rsi");
     rsi_args.insert("period".into(), 14i64);
 
+    let mut candle_pattern_args = Args::new();
+
     let sma_50 = transformers::moving_averages::SMA(sma_args);
     let ema_50 = transformers::moving_averages::EMA(ema_args);
     let rsi_14 = transformers::rsi::RSI(rsi_args);
+    let candle_pattern = transformers::candle_patterns::CANDLE_PATTERN(candle_pattern_args);
 
     asset.set_transformers(vec![
         sma_50,
         ema_50,
-        rsi_14
+        rsi_14,
+        candle_pattern,
     ]);
 
     asset.apply_transformers();
@@ -49,7 +53,7 @@ fn main() {
         vec![&BLACK],
         Some("plots/rsi.png"),
     );
-    println!("{:?}", asset.df.unwrap());
+    println!("{:?}", asset.df.unwrap().head(Some(25)));
 
 
 }
