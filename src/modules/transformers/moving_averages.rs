@@ -10,10 +10,10 @@ pub fn SMA(args: Args) -> DataTransformer {
         let out_col: String = args.get("out_col", "ma".to_string());
         let period: i64 = args.get("period", 50);
         
+        println!("{}, {}, {}", in_col, out_col, period);
         let mut options = RollingOptions::default();
         options.window_size = Duration::new(period);
         options.min_periods = period as usize;
-        println!("{}, {}, {}", in_col, out_col, period);
         println!("window_size: {:?}, min_periods: {}", options.window_size, options.min_periods);
 
         let working_lf = lf

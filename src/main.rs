@@ -10,22 +10,28 @@ use modules::data_transformer::{DataTransformer, Args, ExecutorFn, FailedTransfo
 fn main() {
 
     // instantiate asset from a csv
-    let mut asset = Asset::from_csv("~/app/data/NZDUSD.csv".into(), Some("NZDUSD".into()));
+    let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
 
     let mut args_1 = Args::new();
     args_1.insert("out_col".into(), "sma_50".to_string());
-    args_1.insert("period".into(), 50);
+    args_1.insert("period".into(), 50i64);
 
     let mut args_2 = Args::new();
     args_2.insert("out_col".into(), "sma_100".to_string());
-    args_2.insert("period".into(), 100);
+    args_2.insert("period".into(), 100i64);
+
+    let mut args_3 = Args::new();
+    args_3.insert("out_col".into(), "sma_200".to_string());
+    args_3.insert("period".into(), 200i64);
 
     let SMA_50 = transformers::moving_averages::SMA(args_1);
     let SMA_100 = transformers::moving_averages::SMA(args_2);
+    let SMA_200 = transformers::moving_averages::SMA(args_3);
 
     asset.set_transformers(vec![
         SMA_50,
         SMA_100,
+        SMA_200,
     ]);
 
     asset.apply_transformers();
@@ -69,8 +75,8 @@ fn main() {
     
     let _ = plot_columns(
         &asset.df.clone().unwrap().tail(Some(500)), 
-        vec!["close", "sma_50", "sma_100"], 
-        vec![&RED, &BLUE, &GREEN]
+        vec!["close", "sma_50", "sma_100", "sma_200"], 
+        vec![&RED, &BLUE, &GREEN, &YELLOW]
     );
     println!("{:?}", asset.df.unwrap());
 
