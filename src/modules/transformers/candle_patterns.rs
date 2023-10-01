@@ -21,19 +21,38 @@ pub fn CANDLE_PATTERN(args: Args) -> DataTransformer {
                 .otherwise(lit("GRAY"))
                 .alias(color_out_col.as_str())
             )
+
             .with_column(col(color_out_col.as_str()).shift(1).alias("prev_1_color"))
             .with_column(col(color_out_col.as_str()).shift(2).alias("prev_2_color"))
             .with_column(col(color_out_col.as_str()).shift(3).alias("prev_3_color"))
+
+            .with_column(col("open").shift(1).alias("prev_open"))
+            .with_column(col("high").shift(1).alias("prev_high"))
+            .with_column(col("low").shift(1).alias("prev_low"))
+            .with_column(col("close").shift(1).alias("prev_close"))
+
             .with_column(lit("NO PATTERN").alias(pattern_out_col.as_str()))
-            .with_column(
+
+            .with_column( // GREEN ENGULFING
                     when(
                         col(color_out_col.as_str()).eq(lit("GREEN"))
                             .and(col("prev_1_color").eq(lit("RED")))
-                            // TODO: complete green engulfing logic here
+                            .and(col("open").lt_eq(col("prev_close")))
+                            .and(col("close").gt(col("prev_open")))
                     )
                     .then(lit("GREEN_ENGULFING"))
                     .otherwise(col(pattern_out_col.as_str()))
                     .alias(pattern_out_col.as_str())
+            )
+            .with_column(
+                when(
+                    col(pattern_out_col.as_str()).eq(lit("GREEN_ENGULFING"))
+                        .and(col("prev_2_color").eq(lit("RED")))        
+                        .and(col("prev_3_color").eq(lit("RED")))        
+                )
+                .then(lit("GREEN_THREE_LINE_STRIKE"))
+                .otherwise(col(pattern_out_col.as_str()))
+                .alias(pattern_out_col.as_str())
             )
             ;
         

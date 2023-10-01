@@ -2,6 +2,7 @@ mod modules;
 
 use modules::transformers;
 use plotters::prelude::*;
+use polars::prelude::*;
 
 use modules::asset::Asset;
 use modules::data_transformer::Args;
@@ -41,19 +42,21 @@ fn main() {
     asset.apply_transformers();
 
     
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(1000)), 
-        vec!["close", "sma_50", "ema_50"], 
-        vec![&BLACK, &RED, &BLUE],
-        Some("plots/moving_avgs.png"),
-    );
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(1000)), 
-        vec!["rsi"], 
-        vec![&BLACK],
-        Some("plots/rsi.png"),
-    );
-    println!("{:?}", asset.df.unwrap().head(Some(25)));
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(1000)), 
+    //     vec!["close", "sma_50", "ema_50"], 
+    //     vec![&BLACK, &RED, &BLUE],
+    //     Some("plots/moving_avgs.png"),
+    // );
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(1000)), 
+    //     vec!["rsi"], 
+    //     vec![&BLACK],
+    //     Some("plots/rsi.png"),
+    // );
+
+    println!("{:?}", asset.df.unwrap().tail(Some(10)));
+    // println!("{:?}", asset.df.unwrap().group_by("candle_pattern").agg(&[col("candle_pattern").count().alias("candle_pattern_count")]));
 
 
 }
