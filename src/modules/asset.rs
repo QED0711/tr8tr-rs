@@ -37,6 +37,18 @@ impl Asset {
     }
 
     #[allow(dead_code)]
+    pub fn to_csv(&self, path: String) {
+        // create path to file if it doesn't exit
+        let path_obj = std::path::Path::new(&path);
+        if let Some(parent) = path_obj.parent() {
+            std::fs::create_dir_all(parent).unwrap();
+        }
+
+        let mut file = std::fs::File::create(&path).unwrap();
+        CsvWriter::new(&mut file).finish(&mut self.df.clone().unwrap()).unwrap();
+    }
+
+    #[allow(dead_code)]
     pub fn display(&self) {
         println!("{:?}", self.df);
     }
