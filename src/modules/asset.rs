@@ -23,15 +23,16 @@ impl Asset {
     }
 
     /***** DATAFRAME *****/
-    pub fn from_csv(path: String, name: Option<String>) -> Asset {
+    pub fn from_csv(path: String, name: Option<String>, /* time_column: Option<String>, time_format: Option<String> */) -> Asset {
         let mut a = Asset::new();
-        a.df = Some(
-            CsvReader::from_path(path)
+        let df = CsvReader::from_path(path)
                 .unwrap()
                 .has_header(true)
+                .with_try_parse_dates(true)
                 .finish()
-                .unwrap()
-        );
+                .unwrap();
+
+        a.df = Some(df);
         a.name = name;
         a
     }

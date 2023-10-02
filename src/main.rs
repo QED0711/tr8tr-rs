@@ -31,12 +31,16 @@ fn main() {
     rsi_divergence_args.insert("lookback".into(), 12i64);
     rsi_divergence_args.insert("significance".into(), 0.02f64);
 
+    let mut pivot_point_args: Args = Args::new();    
+    pivot_point_args.insert("time_col".into(), "time".to_string());
+
     let candle_pattern_args = Args::new();
 
     let sma_50 = transformers::moving_averages::SMA(sma_args);
     let ema_50 = transformers::moving_averages::EMA(ema_args);
     let rsi_14 = transformers::rsi::RSI(rsi_args);
     let rsi_divergence: DataTransformer = transformers::rsi::RSI_DIVERGENCE(rsi_divergence_args);
+    let pivot_points: DataTransformer = transformers::pivot_points::WEEKLY_PIVOT_POINTS(pivot_point_args);
     let candle_pattern = transformers::candle_patterns::CANDLE_PATTERN(candle_pattern_args);
 
     asset.set_transformers(vec![
@@ -44,6 +48,7 @@ fn main() {
         ema_50,
         rsi_14,
         rsi_divergence,
+        pivot_points,
         candle_pattern,
     ]);
 
