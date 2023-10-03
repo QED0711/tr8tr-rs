@@ -34,6 +34,9 @@ fn main() {
     let mut pivot_point_args: Args = Args::new();    
     pivot_point_args.insert("time_col".into(), "time".to_string());
 
+    let mut atr_args: Args = Args::new();
+    atr_args.insert("period".into(), 14i64);
+
     let candle_pattern_args = Args::new();
 
     let sma_50 = transformers::moving_averages::SMA(sma_args);
@@ -41,6 +44,7 @@ fn main() {
     let rsi_14 = transformers::rsi::RSI(rsi_args);
     let rsi_divergence: DataTransformer = transformers::rsi::RSI_DIVERGENCE(rsi_divergence_args);
     let pivot_points: DataTransformer = transformers::pivot_points::WEEKLY_PIVOT_POINTS(pivot_point_args);
+    let atr: DataTransformer = transformers::atr::ATR(atr_args);
     let candle_pattern = transformers::candle_patterns::CANDLE_PATTERN(candle_pattern_args);
 
     asset.set_transformers(vec![
@@ -49,30 +53,31 @@ fn main() {
         rsi_14,
         rsi_divergence,
         pivot_points,
+        atr,
         candle_pattern,
     ]);
 
     asset.apply_transformers();
 
     
+    let _ = chart::plot_columns(
+        &asset.df.clone().unwrap().tail(Some(1000)), 
+        vec!["close", "pivot_point", "support_1", "resistance_1"], 
+        vec![&BLACK, &CYAN, &BLUE, &RED],
+        Some("plots/moving_avgs.png"),
+    );
     // let _ = chart::plot_columns(
-    //     &asset.df.clone().unwrap().tail(Some(1000)), 
-    //     vec!["close", "sma_50", "ema_50"], 
-    //     vec![&BLACK, &RED, &BLUE],
-    //     Some("plots/moving_avgs.png"),
+    //     &asset.df.clone().unwrap().tail(Some(500)), 
+    //     vec!["rsi"], 
+    //     vec![&BLACK],
+    //     Some("plots/rsi.png"),
     // );
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(500)), 
-        vec!["rsi"], 
-        vec![&BLACK],
-        Some("plots/rsi.png"),
-    );
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(500)), 
-        vec!["rsi_divergence"], 
-        vec![&BLACK],
-        Some("plots/rsi_divergence.png"),
-    );
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(500)), 
+    //     vec!["rsi_divergence"], 
+    //     vec![&BLACK],
+    //     Some("plots/rsi_divergence.png"),
+    // );
 
     println!("{:?}", asset.df.clone().unwrap());
     asset.to_csv("./data/transformed/AUDUSD.csv".to_string());
