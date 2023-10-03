@@ -17,6 +17,15 @@ pub fn WEEKLY_PIVOT_POINTS(args: Args) -> DataTransformer {
                 .otherwise(lit(false))
                 .alias("week_start")
             )
+            .with_column(
+                col("week_start").cumsum(true).alias("week_group")
+            )
+            .with_column(
+                col("high").max().over([col("week_group")]).alias("max_high")
+            )
+            .with_column(
+                col("low").min().over([col("week_group")]).alias("min_low")
+            )
             ;
         
         Ok(working_lf)
