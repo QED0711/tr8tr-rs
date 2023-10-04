@@ -66,6 +66,12 @@ fn main() {
         vec![&BLACK, &CYAN, &BLUE, &RED],
         Some("plots/moving_avgs.png"),
     );
+    let _ = chart::plot_columns(
+        &asset.df.clone().unwrap().tail(Some(1000)), 
+        vec!["atr"], 
+        vec![&CYAN],
+        Some("plots/atr.png"),
+    );
     // let _ = chart::plot_columns(
     //     &asset.df.clone().unwrap().tail(Some(500)), 
     //     vec!["rsi"], 
