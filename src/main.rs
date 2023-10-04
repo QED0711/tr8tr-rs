@@ -37,6 +37,10 @@ fn main() {
     let mut atr_args: Args = Args::new();
     atr_args.insert("period".into(), 14i64);
 
+    let mut candle_atr_args: Args = Args::new();
+    candle_atr_args.insert("low_level".into(), "open");
+    candle_atr_args.insert("high_level".into(), "close");
+
     let candle_pattern_args = Args::new();
 
     let sma_50 = transformers::moving_averages::SMA(sma_args);
@@ -45,6 +49,7 @@ fn main() {
     let rsi_divergence: DataTransformer = transformers::rsi::RSI_DIVERGENCE(rsi_divergence_args);
     let pivot_points: DataTransformer = transformers::pivot_points::WEEKLY_PIVOT_POINTS(pivot_point_args);
     let atr: DataTransformer = transformers::atr::ATR(atr_args);
+    let candle_atr: DataTransformer = transformers::atr::CANDLE_ATR(candle_atr_args);
     let candle_pattern = transformers::candle_patterns::CANDLE_PATTERN(candle_pattern_args);
 
     asset.set_transformers(vec![
@@ -54,24 +59,25 @@ fn main() {
         rsi_divergence,
         pivot_points,
         atr,
+        candle_atr,
         candle_pattern,
     ]);
 
     asset.apply_transformers();
 
     
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(1000)), 
-        vec!["close", "pivot_point", "support_1", "resistance_1"], 
-        vec![&BLACK, &CYAN, &BLUE, &RED],
-        Some("plots/moving_avgs.png"),
-    );
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(1000)), 
-        vec!["atr"], 
-        vec![&CYAN],
-        Some("plots/atr.png"),
-    );
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(1000)), 
+    //     vec!["close", "pivot_point", "support_1", "resistance_1"], 
+    //     vec![&BLACK, &CYAN, &BLUE, &RED],
+    //     Some("plots/moving_avgs.png"),
+    // );
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(1000)), 
+    //     vec!["atr"], 
+    //     vec![&CYAN],
+    //     Some("plots/atr.png"),
+    // );
     // let _ = chart::plot_columns(
     //     &asset.df.clone().unwrap().tail(Some(500)), 
     //     vec!["rsi"], 
@@ -86,9 +92,6 @@ fn main() {
     // );
 
     println!("{:?}", asset.df.clone().unwrap());
-    asset.to_csv("./data/transformed/AUDUSD.csv".to_string());
-    // println!("{:?}", asset.df.clone().unwrap().columns(&["candle_pattern", "candle_pattern_score"]));
-    // println!("{:?}", asset.df.unwrap().group_by("candle_pattern").agg(&[col("candle_pattern").count().alias("candle_pattern_count")]));
-
+    // asset.to_csv("./data/transformed/AUDUSD.csv".to_string());
 
 }

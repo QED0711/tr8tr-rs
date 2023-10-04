@@ -52,3 +52,28 @@ pub fn ATR(args: Args) -> DataTransformer {
 
      DataTransformer::new("ATR".into(), atr_transformer, Some(args))
 }
+
+
+#[allow(non_snake_case, dead_code)]
+pub fn CANDLE_ATR(args: Args) -> DataTransformer {
+    fn candle_atr_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+    
+        // unpack args
+        let atr_col: String = args.get("atr_col", "atr".to_string());
+        let high_level: String = args.get("high_level", "high".to_string());
+        let low_level: String = args.get("low_level", "low".to_string());
+        let out_col: String = args.get("out_col", "candle_atr".to_string());
+        
+
+        let working_lf = lf.clone()
+            .with_column(
+                ((col(&high_level) - col(&low_level)).abs() / col(&atr_col))
+                .alias(&out_col)
+            )
+            ;
+
+        Ok(working_lf)
+    }
+
+     DataTransformer::new("ATR".into(), candle_atr_transformer, Some(args))
+}
