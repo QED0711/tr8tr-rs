@@ -5,3 +5,4 @@ pub mod trigger;
 pub mod notifier;
 
 pub mod transformers;
+pub mod triggers;

@@ -1,15 +1,21 @@
-use std::io::Error;
+use polars::prelude::PolarsError;
 
 use super::asset::Asset;
 
 pub struct TriggerResponse {
-    pub id: String,
-    pub origin: String,
+    pub id: Option<String>,
+    pub origin: Option<String>,
     pub direction: String,
     pub description: Option<String>,
 }
 
-pub type TriggerFn = fn(asset: &Asset) -> Result<TriggerResponse, Error>;
+impl TriggerResponse {
+    pub fn hold() -> Self{
+        Self {direction: "HOLD".to_string(), id: None, origin: None, description: None}
+    }
+}
+
+pub type TriggerFn = fn(asset: &Asset) -> Result<TriggerResponse, PolarsError>;
 
 pub struct Trigger {
     executor: TriggerFn,
@@ -30,8 +36,8 @@ impl Trigger {
         let response = match evaluation {
             Ok(resp) => resp,
             Err(_) => TriggerResponse { 
-                id: "".to_string(),
-                origin: self.origin.clone(),
+                id: None,
+                origin: None,
                 direction: "HOLD".to_string(),
                 description: None, 
             }

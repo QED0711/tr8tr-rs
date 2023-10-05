@@ -6,7 +6,7 @@ use super::data_transformer::DataTransformer;
 #[derive(Debug)]
 pub struct Asset {
     pub df: Option<DataFrame>,
-    pub name: Option<String>,
+    pub symbol: Option<String>,
     pub transformers: Vec<DataTransformer>
 }
 
@@ -19,13 +19,13 @@ pub struct Asset {
 impl Asset {
     /***** UTILITY *****/
     fn new() -> Asset {
-        Asset{df: None, name: None, transformers: vec![]}
+        Asset{df: None, symbol: None, transformers: vec![]}
     }
 
     /***** DATAFRAME *****/
-    pub fn from_csv(path: String, name: Option<String>, /* time_column: Option<String>, time_format: Option<String> */) -> Asset {
+    pub fn from_csv(path: String, symbol: Option<String>) -> Asset {
         let mut a = Asset::new();
-        let df = CsvReader::from_path(path)
+        let mut df = CsvReader::from_path(path)
                 .unwrap()
                 .has_header(true)
                 .with_try_parse_dates(true)
@@ -33,8 +33,13 @@ impl Asset {
                 .unwrap();
 
         a.df = Some(df);
-        a.name = name;
+        a.symbol = symbol;
         a
+    }
+
+    pub fn trim_tail(&mut self, n: usize) {
+        let df = self.df.as_ref().unwrap();
+        self.df = Some(df.slice(0, df.height() - n))
     }
 
     #[allow(dead_code)]

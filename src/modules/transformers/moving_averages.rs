@@ -68,7 +68,7 @@ pub fn EMA(args: Args) -> DataTransformer {
 
 #[allow(non_snake_case, dead_code)]
 pub fn TRIPLE_MA_TREND(args: Args) -> DataTransformer {
-    fn ema_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+    fn triple_ma_trend_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
     
         // unpack args
         let in_col: String = args.get("in_col", "close".to_string());
@@ -77,8 +77,6 @@ pub fn TRIPLE_MA_TREND(args: Args) -> DataTransformer {
         let slow_period: i64 = args.get("slow_period", 200);
         let ma_type: String = args.get("ma_type", "sma".to_string());
         
-        
-    
         // setup moving average parameters
         let mut slow_options = RollingOptions::default();
         slow_options.window_size = Duration::new(slow_period);
@@ -146,6 +144,6 @@ pub fn TRIPLE_MA_TREND(args: Args) -> DataTransformer {
         Ok(working_lf)
     }
 
-     DataTransformer::new("EMA".into(), ema_transformer, Some(args))
+     DataTransformer::new("TRIPLE_MA_TREND".into(), triple_ma_trend_transformer, Some(args))
 
 }
