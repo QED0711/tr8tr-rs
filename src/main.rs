@@ -23,6 +23,12 @@ fn main() {
     ema_args.insert("out_col".into(), "ema_50".to_string());
     ema_args.insert("period".into(), 50i64);
 
+    let mut ma_trend: Args = Args::new();
+    ma_trend.insert("fast_period".into(), 50i64);
+    ma_trend.insert("medium_period".into(), 100i64);
+    ma_trend.insert("slow_period".into(), 200i64);
+    ma_trend.insert("ma_type".into(), "ema".to_string());
+
     let mut rsi_args = Args::new();
     rsi_args.insert("out_col".into(), "rsi");
     rsi_args.insert("period".into(), 14i64);
@@ -45,6 +51,7 @@ fn main() {
 
     let sma_50 = transformers::moving_averages::SMA(sma_args);
     let ema_50 = transformers::moving_averages::EMA(ema_args);
+    let triple_ma_trend = transformers::moving_averages::EMA(ma_trend);
     let rsi_14 = transformers::rsi::RSI(rsi_args);
     let rsi_divergence: DataTransformer = transformers::rsi::RSI_DIVERGENCE(rsi_divergence_args);
     let pivot_points: DataTransformer = transformers::pivot_points::WEEKLY_PIVOT_POINTS(pivot_point_args);
@@ -55,6 +62,7 @@ fn main() {
     asset.set_transformers(vec![
         sma_50,
         ema_50,
+        triple_ma_trend,
         rsi_14,
         rsi_divergence,
         pivot_points,
@@ -66,12 +74,12 @@ fn main() {
     asset.apply_transformers();
 
     
-    // let _ = chart::plot_columns(
-    //     &asset.df.clone().unwrap().tail(Some(1000)), 
-    //     vec!["close", "pivot_point", "support_1", "resistance_1"], 
-    //     vec![&BLACK, &CYAN, &BLUE, &RED],
-    //     Some("plots/moving_avgs.png"),
-    // );
+    let _ = chart::plot_columns(
+        &asset.df.clone().unwrap().tail(Some(1000)), 
+        vec!["close", "fast_ma", "medium_ma", "slow_ma"], 
+        vec![&BLACK, &CYAN, &BLUE, &RED],
+        Some("plots/moving_avgs.png"),
+    );
     // let _ = chart::plot_columns(
     //     &asset.df.clone().unwrap().tail(Some(1000)), 
     //     vec!["atr"], 
