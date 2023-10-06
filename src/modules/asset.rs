@@ -1,3 +1,5 @@
+use std::any::TypeId;
+
 use polars::prelude::*;
 
 // mod modules;
@@ -41,6 +43,32 @@ impl Asset {
         let df = self.df.as_ref().unwrap();
         self.df = Some(df.slice(0, df.height() - n))
     }
+
+    fn _get_value_at_index(&self, index: usize, col: &str) -> Result<Box<dyn std::any::Any>, String> {
+        match &self.df {
+            Some(df) => {
+                let col = df.column(col).map_err(|_| format!("Column '{col}' not found"))?;
+                match col.dtype() {
+                    DataType::Float64 => {
+                        Ok(Box::new(col.f64().unwrap().get(index).ok_or("Index out of bounds".to_string())?))
+                    }
+                    _ => Err("Unsupported data type".to_string())
+                }
+            },
+            None => Err("DataFrame is None".to_string())
+        }
+    }
+
+    pub fn get_value<T: 'static>(&self, index: usize, col: &str, index_from_end: bool) -> Result<T, String> {
+        let target_idx = if index_from_end {self.df.as_ref().unwrap().height() - index} else {index};
+
+        let boxed_val: Box<dyn std::any::Any> = self._get_value_at_index(target_idx, col).unwrap();
+        match boxed_val.downcast::<T>() {
+            Ok(val) => Ok(*val),
+            Err(_) => Err("Failed to downcast".to_string())
+        }
+    }
+
 
     #[allow(dead_code)]
     pub fn to_csv(&self, path: String) {

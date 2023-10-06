@@ -1,6 +1,7 @@
 mod modules;
 
 use modules::transformers;
+use modules::triggers;
 use plotters::prelude::*;
 use polars::prelude::*;
 
@@ -9,6 +10,7 @@ use modules::data_transformer::Args;
 use modules::chart;
 
 use crate::modules::data_transformer::DataTransformer;
+use crate::modules::transformers::pivot_points::WEEKLY_PIVOT_POINTS;
 
 fn main() {
 
@@ -74,19 +76,24 @@ fn main() {
 
     asset.apply_transformers();
 
+    let weekly_pivot_trigger = triggers::sr_bounce::WEEKLY_PIVOT_BOUNCE();
+
+    // for testing:
+    weekly_pivot_trigger.evaluate(&asset);
+
     
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(1000)), 
-        vec!["close", "fast_ma", "medium_ma", "slow_ma"], 
-        vec![&BLACK, &CYAN, &BLUE, &RED],
-        Some("plots/moving_avgs.png"),
-    );
-    let _ = chart::plot_columns(
-        &asset.df.clone().unwrap().tail(Some(1000)), 
-        vec!["ma_trend"], 
-        vec![&CYAN],
-        Some("plots/ma_trend.png"),
-    );
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(1000)), 
+    //     vec!["close", "fast_ma", "medium_ma", "slow_ma"], 
+    //     vec![&BLACK, &CYAN, &BLUE, &RED],
+    //     Some("plots/moving_avgs.png"),
+    // );
+    // let _ = chart::plot_columns(
+    //     &asset.df.clone().unwrap().tail(Some(1000)), 
+    //     vec!["ma_trend"], 
+    //     vec![&CYAN],
+    //     Some("plots/ma_trend.png"),
+    // );
     // let _ = chart::plot_columns(
     //     &asset.df.clone().unwrap().tail(Some(500)), 
     //     vec!["rsi"], 
