@@ -1705,6 +1705,7 @@ dependencies = [
 name = "tr8tr"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "plotters",
  "polars",
 ]
