@@ -4,6 +4,7 @@ use super::asset::Asset;
 
 pub struct TriggerResponse {
     pub id: Option<String>,
+    pub symbol: Option<String>,
     pub origin: Option<String>,
     pub direction: String,
     pub description: Option<String>,
@@ -11,7 +12,7 @@ pub struct TriggerResponse {
 
 impl TriggerResponse {
     pub fn hold() -> Self{
-        Self {direction: "HOLD".to_string(), id: None, origin: None, description: None}
+        Self {direction: "HOLD".to_string(), symbol: None, id: None, origin: None, description: None}
     }
 }
 
@@ -37,6 +38,7 @@ impl Trigger {
             Ok(resp) => resp,
             Err(_) => TriggerResponse { 
                 id: None,
+                symbol: None,
                 origin: None,
                 direction: "HOLD".to_string(),
                 description: None, 

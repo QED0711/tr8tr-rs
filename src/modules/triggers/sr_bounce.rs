@@ -32,16 +32,18 @@ pub fn WEEKLY_PIVOT_BOUNCE() -> Trigger {
     fn weekly_pivot_bounce_executor(asset: &Asset) -> Result<TriggerResponse, PolarsError> {
 
         // Static variable setup
+        let symbol = asset.symbol.clone().unwrap();
         let pip_value = match &asset.symbol {
             Some(symbol) => if symbol.contains("JPY")  {0.01} else {0.0001}
             None => 0.0001
         };
+
         let band_pip_rng = 8.; // n pips +/- the center
         let pip_margin: f64 = pip_value * band_pip_rng;
 
         let cur_timestamp: i64 = asset.get_value::<i64>("time", 1, true).unwrap();
         let cur_datetime = Utc.timestamp_opt(cur_timestamp / 1_000_000, 0).unwrap(); // convert from microseconds to seconds
-        let formatted_datetime = cur_datetime.format("%Y-%m-%d %H:%M:%S");
+        let datetime_str = cur_datetime.format("%Y-%m-%d %H:%M:%S");
 
         let cur_open: f64 = asset.get_value::<f64>("open", 1, true).unwrap();
 
@@ -70,7 +72,8 @@ pub fn WEEKLY_PIVOT_BOUNCE() -> Trigger {
                 Some(band) => {
                     return Ok(TriggerResponse {
                             direction: "BUY".to_string(),
-                            id: None,
+                            symbol: Some(symbol.clone()),
+                            id: Some(format!("{symbol} - {datetime_str} - weekly_pivot_bounce").to_string()),
                             origin: Some("WEEKLY_PIVOT_BOUNCE".to_string()),
                             description: Some(format!("bounce from {}", band._type).to_string()),
                         })
