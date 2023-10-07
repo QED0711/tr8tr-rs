@@ -1,4 +1,4 @@
-use std::any::TypeId;
+use std::collections::HashMap;
 
 use polars::prelude::*;
 
@@ -9,7 +9,8 @@ use super::data_transformer::DataTransformer;
 pub struct Asset {
     pub df: Option<DataFrame>,
     pub symbol: Option<String>,
-    pub transformers: Vec<DataTransformer>
+    pub transformers: Vec<DataTransformer>,
+    dtypes: HashMap<String, DataType>,
 }
 
 /* 
@@ -21,7 +22,7 @@ pub struct Asset {
 impl Asset {
     /***** UTILITY *****/
     fn new() -> Asset {
-        Asset{df: None, symbol: None, transformers: vec![]}
+        Asset{df: None, symbol: None, transformers: vec![], dtypes: HashMap::new()}
     }
 
     /***** DATAFRAME *****/
@@ -44,7 +45,7 @@ impl Asset {
         self.df = Some(df.slice(0, df.height() - n))
     }
 
-    fn _get_value_at_index(&self, index: usize, col: &str) -> Result<Box<dyn std::any::Any>, String> {
+    fn get_boxed_value(&self, index: usize, col: &str) -> Result<Box<dyn std::any::Any>, String> {
         match &self.df {
             Some(df) => {
                 let col = df.column(col).map_err(|_| format!("Column '{col}' not found"))?;
@@ -62,7 +63,7 @@ impl Asset {
     pub fn get_value<T: 'static>(&self, index: usize, col: &str, index_from_end: bool) -> Result<T, String> {
         let target_idx = if index_from_end {self.df.as_ref().unwrap().height() - index} else {index};
 
-        let boxed_val: Box<dyn std::any::Any> = self._get_value_at_index(target_idx, col).unwrap();
+        let boxed_val: Box<dyn std::any::Any> = self.get_boxed_value(target_idx, col).unwrap();
         match boxed_val.downcast::<T>() {
             Ok(val) => Ok(*val),
             Err(_) => Err("Failed to downcast".to_string())
@@ -114,6 +115,18 @@ impl Asset {
                 .collect()
                 .expect("Failed transforation")
             );
+        self.extract_dtypes();
+    }
+
+    pub fn extract_dtypes(&mut self) {
+        let columns = self.df.as_ref().unwrap().get_column_names();
+        let dtypes = self.df.as_ref().unwrap().dtypes();
+
+        for i in 0..columns.len() {
+            self.dtypes.insert(columns[i].to_string(), dtypes[i].clone());
+        }
+
+        println!("{:?}", self.dtypes);
     }
 }
 
