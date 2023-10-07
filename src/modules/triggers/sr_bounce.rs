@@ -40,10 +40,8 @@ pub fn WEEKLY_PIVOT_BOUNCE() -> Trigger {
         let pip_margin: f64 = pip_value * band_pip_rng;
 
         let cur_timestamp: i64 = asset.get_value::<i64>("time", 1, true).unwrap();
-        println!("TIMESTAMP: {cur_timestamp}");
         let cur_datetime = Utc.timestamp_opt(cur_timestamp / 1_000_000, 0).unwrap(); // convert from microseconds to seconds
         let formatted_datetime = cur_datetime.format("%Y-%m-%d %H:%M:%S");
-        println!("DATETIME: {formatted_datetime}");
 
         let cur_open: f64 = asset.get_value::<f64>("open", 1, true).unwrap();
 
