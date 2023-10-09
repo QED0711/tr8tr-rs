@@ -3,18 +3,18 @@ use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerA
 
 /**************************************************** ARG TYPES ****************************************************/
 #[derive(Debug)]
-#[allow(non_camel_case_types)]
 pub struct RsiArgs{
     pub in_col: Option<String>,
     pub out_col: Option<String>,
     pub period: Option<i64>,
 }
 
+#[derive(Debug)]
 pub struct RsiDivergenceArgs{
-    pub in_col: Option<String>,
+    pub rsi_col: String,
     pub out_col: Option<String>,
     pub lookback: Option<i64>,
-    pub significance: Option<i64>,
+    pub significance: Option<f64>,
 }
 
 
@@ -27,8 +27,8 @@ pub fn RSI(args: RsiArgs) -> DataTransformer<RsiArgs> {
     let rsi_transformer: ExecutorFn<RsiArgs> = |lf, args| {
     
         // unpack args
-        let in_col = args.in_col.unwrap_or("close".to_string());
-        let out_col = args.out_col.unwrap_or("rsi".to_string());
+        let in_col= args.in_col.as_deref().unwrap_or("close");
+        let out_col= args.out_col.as_deref().unwrap_or("rsi");
         let period = args.period.unwrap_or(14);
         
         // setup moving average parameters
@@ -39,7 +39,7 @@ pub fn RSI(args: RsiArgs) -> DataTransformer<RsiArgs> {
         // apply rsi calculation to lazy frame
         let working_lf = lf
             .with_column(
-                col(in_col.as_str())
+                col(in_col)
                     .diff(1i64, NullBehavior::default())
                     .alias("price_change")    
             )
@@ -68,14 +68,14 @@ pub fn RSI(args: RsiArgs) -> DataTransformer<RsiArgs> {
                 (col("avg_gain") / col("avg_loss")).alias("rs")
             )
             .with_column(
-                (lit(100) - (lit(100) / (lit(1) + col("rs")))).alias(out_col.as_str())
+                (lit(100) - (lit(100) / (lit(1) + col("rs")))).alias(out_col)
             )
             .drop_columns(&["price_change", "gain", "loss", "avg_gain", "avg_loss", "rs"]);
         
         Ok(working_lf)
     };
 
-     DataTransformer::new("RSI".into(), rsi_transformer, Some(args))
+     DataTransformer::new("RSI".into(), rsi_transformer, args)
 }
 
 
@@ -85,8 +85,8 @@ pub fn RSI(args: RsiArgs) -> DataTransformer<RsiArgs> {
 pub fn RSI_DIVERGENCE(args: RsiDivergenceArgs) -> DataTransformer<RsiDivergenceArgs> {
     let rsi_divergence_transformer: ExecutorFn<RsiDivergenceArgs> = |lf, args| {
 
-        let rsi_col: String = args.rsi_col.unwrap_or("rsi".to_string());
-        let out_col: String = args.out_col.unwrap_or("rsi_divergence".to_string());
+        let rsi_col = args.rsi_col.as_str();
+        let out_col = args.out_col.as_deref().unwrap_or("rsi_divergence");
         let lookback: i64 = args.lookback.unwrap_or(5);
         let significance: f64 = args.significance.unwrap_or(0.02);
 

@@ -1,13 +1,13 @@
-use polars::{prelude::*, series::ops::NullBehavior};
+use polars::prelude::*;
 use crate::modules::data_transformer::{DataTransformer, TransformerArgs, ExecutorFn};
 
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub struct CandlePatternArgs{
-    pub color_col_col: Option<String>,
+    pub color_out_col: Option<String>,
     pub pattern_out_col: Option<String>,
-    pub color_out_col: Option<String>
+    pub score_out_col: Option<String>
 }
 
 impl TransformerArgs for CandlePatternArgs {}
@@ -18,9 +18,9 @@ pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternA
     let candle_pattern: ExecutorFn<CandlePatternArgs> = |lf: LazyFrame, args| {
     
         // unpack args
-        let color_out_col: String = args.color_out_col.unwrap_or("candle_color".to_string());
-        let pattern_out_col: String = args.pattern_out_col.unwrap_or("candle_pattern".to_string());
-        let score_out_col: String = args.score_out_col.unwrap_or("candle_pattern_score".to_string());
+        let color_out_col = args.color_out_col.as_deref().unwrap_or("candle_color");
+        let pattern_out_col = args.pattern_out_col.as_deref().unwrap_or("candle_pattern");
+        let score_out_col = args.score_out_col.as_deref().unwrap_or("candle_pattern_score");
 
         let working_lf = lf
             .with_column(
@@ -29,12 +29,12 @@ pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternA
                 .when(col("close").lt(col("open")))
                 .then(lit("RED"))
                 .otherwise(lit("GRAY"))
-                .alias(color_out_col.as_str())
+                .alias(color_out_col)
             )
 
-            .with_column(col(color_out_col.as_str()).shift(1).alias("prev_1_color"))
-            .with_column(col(color_out_col.as_str()).shift(2).alias("prev_2_color"))
-            .with_column(col(color_out_col.as_str()).shift(3).alias("prev_3_color"))
+            .with_column(col(color_out_col).shift(1).alias("prev_1_color"))
+            .with_column(col(color_out_col).shift(2).alias("prev_2_color"))
+            .with_column(col(color_out_col).shift(3).alias("prev_3_color"))
 
             .with_column(col("open").shift(1).alias("prev_open"))
             .with_column(col("high").shift(1).alias("prev_high"))
@@ -45,29 +45,29 @@ pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternA
             .with_column(col("low").shift(2).alias("prev_2_low"))
             .with_column(col("close").shift(2).alias("prev_2_close"))
 
-            .with_column(lit("NO PATTERN").alias(pattern_out_col.as_str()))
+            .with_column(lit("NO PATTERN").alias(pattern_out_col))
 
             .with_column( // GREEN ENGULFING
                     when(
-                        col(color_out_col.as_str()).eq(lit("GREEN"))
+                        col(color_out_col).eq(lit("GREEN"))
                             .and(col("prev_1_color").eq(lit("RED")))
                             .and(col("open").lt_eq(col("prev_close")))
                             .and(col("close").gt(col("prev_high")))
                     )
                     .then(lit("GREEN_ENGULFING"))
-                    .otherwise(col(pattern_out_col.as_str()))
-                    .alias(pattern_out_col.as_str())
+                    .otherwise(col(pattern_out_col))
+                    .alias(pattern_out_col)
             )
 
             .with_column( // GREEN 3 LINE STRIKE
                 when(
-                    col(pattern_out_col.as_str()).eq(lit("GREEN_ENGULFING"))
+                    col(pattern_out_col).eq(lit("GREEN_ENGULFING"))
                         .and(col("prev_2_color").eq(lit("RED")))        
                         .and(col("prev_3_color").eq(lit("RED")))        
                 )
                 .then(lit("GREEN_THREE_LINE_STRIKE"))
-                .otherwise(col(pattern_out_col.as_str()))
-                .alias(pattern_out_col.as_str())
+                .otherwise(col(pattern_out_col))
+                .alias(pattern_out_col)
             )
 
             .with_column( // GREEN MORNING STAR
@@ -81,31 +81,31 @@ pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternA
                         .and(col("close").gt((col("prev_2_open") + col("prev_2_close")) / lit(2)))
                 )
                 .then(lit("GREEN_MORNING_STAR"))
-                .otherwise(col(pattern_out_col.as_str()))
-                .alias(pattern_out_col.as_str())
+                .otherwise(col(pattern_out_col))
+                .alias(pattern_out_col)
             )
 
             .with_column( // RED ENGULFING
                     when(
-                        col(color_out_col.as_str()).eq(lit("RED"))
+                        col(color_out_col).eq(lit("RED"))
                             .and(col("prev_1_color").eq(lit("GREEN")))
                             .and(col("open").gt_eq(col("prev_close")))
                             .and(col("close").lt(col("prev_low")))
                     )
                     .then(lit("RED_ENGULFING"))
-                    .otherwise(col(pattern_out_col.as_str()))
-                    .alias(pattern_out_col.as_str())
+                    .otherwise(col(pattern_out_col))
+                    .alias(pattern_out_col)
             )
 
             .with_column( // RED 3 LINE STRIKE
                 when(
-                    col(pattern_out_col.as_str()).eq(lit("RED_ENGULFING"))
+                    col(pattern_out_col).eq(lit("RED_ENGULFING"))
                         .and(col("prev_2_color").eq(lit("GREEN")))        
                         .and(col("prev_3_color").eq(lit("GREEN")))        
                 )
                 .then(lit("RED_THREE_LINE_STRIKE"))
-                .otherwise(col(pattern_out_col.as_str()))
-                .alias(pattern_out_col.as_str())
+                .otherwise(col(pattern_out_col))
+                .alias(pattern_out_col)
             )
 
             .with_column( // RED EVENING STAR
@@ -119,19 +119,19 @@ pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternA
                         .and(col("close").lt((col("prev_2_open") + col("prev_2_close")) / lit(2)))
                 )
                 .then(lit("RED_EVENING_STAR"))
-                .otherwise(col(pattern_out_col.as_str()))
-                .alias(pattern_out_col.as_str())
+                .otherwise(col(pattern_out_col))
+                .alias(pattern_out_col)
             )
 
             .with_column( // score columns
-                when(col(pattern_out_col.as_str()).eq(lit("GREEN_ENGULFING"))).then(lit(0.5))
-                .when(col(pattern_out_col.as_str()).eq(lit("GREEN_THREE_LINE_STRIKE"))).then(lit(1.))
-                .when(col(pattern_out_col.as_str()).eq(lit("GREEN_MORNING_STAR"))).then(lit(1.))
-                .when(col(pattern_out_col.as_str()).eq(lit("RED_ENGULFING"))).then(lit(-0.5))
-                .when(col(pattern_out_col.as_str()).eq(lit("RED_THREE_LINE_STRIKE"))).then(lit(-1.))
-                .when(col(pattern_out_col.as_str()).eq(lit("RED_EVENING_STAR"))).then(lit(-1.))
+                when(col(pattern_out_col).eq(lit("GREEN_ENGULFING"))).then(lit(0.5))
+                .when(col(pattern_out_col).eq(lit("GREEN_THREE_LINE_STRIKE"))).then(lit(1.))
+                .when(col(pattern_out_col).eq(lit("GREEN_MORNING_STAR"))).then(lit(1.))
+                .when(col(pattern_out_col).eq(lit("RED_ENGULFING"))).then(lit(-0.5))
+                .when(col(pattern_out_col).eq(lit("RED_THREE_LINE_STRIKE"))).then(lit(-1.))
+                .when(col(pattern_out_col).eq(lit("RED_EVENING_STAR"))).then(lit(-1.))
                 .otherwise(lit(0.0))
-                .alias(score_out_col.as_str())
+                .alias(score_out_col)
             )
             
             .drop_columns(&[ // cleanup
@@ -145,5 +145,5 @@ pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternA
         Ok(working_lf)
     };
 
-     DataTransformer::new("candle_pattern".into(), candle_pattern, Some(args))
+     DataTransformer::new("candle_pattern".into(), candle_pattern, args)
 }

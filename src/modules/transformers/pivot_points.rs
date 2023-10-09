@@ -18,8 +18,8 @@ pub fn WEEKLY_PIVOT_POINTS(args: WeeklyPivotPointArgs) -> DataTransformer<Weekly
     let weekly_pivot_points: ExecutorFn<WeeklyPivotPointArgs> = |lf, args| {
     
         // unpack args
-        let time_col: String = args.time_col.unwrap_or("time".to_string());
-        let out_col_prefix: String = args.out_col_prefix.unwrap_or("".to_string());
+        let time_col = args.time_col.as_deref().unwrap_or("time");
+        let out_col_prefix = args.out_col_prefix.as_deref().unwrap_or("");
         
         let working_lf = lf
             .with_column(

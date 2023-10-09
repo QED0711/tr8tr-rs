@@ -3,16 +3,14 @@ use crate::modules::data_transformer::{DataTransformer, TransformerArgs, Executo
 
 /**************************************************** ARG TYPES ****************************************************/
 #[derive(Debug)]
-#[allow(non_camel_case_types)]
-pub struct SMA_Args{
+pub struct SmaArgs{
     pub in_col: Option<String>,
     pub out_col: Option<String>,
     pub period: Option<i64>
 }
 
 #[derive(Debug)]
-#[allow(non_camel_case_types)]
-pub struct EMA_Args{
+pub struct EmaArgs{
     pub in_col: Option<String>,
     pub out_col: Option<String>,
     pub period: Option<i64>
@@ -27,19 +25,19 @@ pub struct TripleMaTrenendArgs{
     pub ma_type: Option<String>,
 }
 
-impl TransformerArgs for SMA_Args{}
-impl TransformerArgs for EMA_Args{}
+impl TransformerArgs for SmaArgs{}
+impl TransformerArgs for EmaArgs{}
 impl TransformerArgs for TripleMaTrenendArgs{}
 
 /**************************************************** TRANSFORMERS ****************************************************/
 
 #[allow(non_snake_case, dead_code)]
-pub fn SMA(args: SMA_Args) -> DataTransformer<SMA_Args> {
-    let sma_transformer: ExecutorFn<SMA_Args> = |lf, args| {
+pub fn SMA(args: SmaArgs) -> DataTransformer<SmaArgs> {
+    let sma_transformer: ExecutorFn<SmaArgs> = |lf, args| {
     
         // unpack args
-        let in_col = args.in_col.unwrap_or("close".to_string());
-        let out_col = args.out_col.unwrap_or("sma".to_string());
+        let in_col= args.in_col.as_deref().unwrap_or("close");
+        let out_col= args.out_col.as_deref().unwrap_or("sma");
         let period = args.period.unwrap_or(50);
         
         // setup moving average parameters
@@ -50,9 +48,9 @@ pub fn SMA(args: SMA_Args) -> DataTransformer<SMA_Args> {
         // apply moving averge to lazy frame
         let working_lf = lf
             .with_columns([
-                col(in_col.as_str())
+                col(in_col)
                     .rolling_mean(options)
-                    .alias(out_col.as_str())
+                    .alias(out_col)
             ]);
         
         Ok(working_lf)
@@ -62,16 +60,13 @@ pub fn SMA(args: SMA_Args) -> DataTransformer<SMA_Args> {
 }
 
 #[allow(non_snake_case, dead_code)]
-pub fn EMA(args: EMA_Args) -> DataTransformer<EMA_Args> {
-    let ema_transformer: ExecutorFn<EMA_Args> = |lf, args| {
+pub fn EMA(args: EmaArgs) -> DataTransformer<EmaArgs> {
+    let ema_transformer: ExecutorFn<EmaArgs> = |lf, args| {
     
         // unpack args
-        let in_col = args.in_col.unwrap_or("close".to_string());
-        let out_col = args.out_col.unwrap_or("sma".to_string());
+        let in_col= args.in_col.as_deref().unwrap_or("close");
+        let out_col= args.out_col.as_deref().unwrap_or("sma");
         let period = args.period.unwrap_or(50);
-        // let in_col: String = args.get("in_col", "close".to_string());
-        // let out_col: String = args.get("out_col", "ema".to_string());
-        // let period: i64 = args.get("period", 50);
         
         // calculate weights for exponential moving average
         let alpha = 2.0 / (period as f64 + 1.0);
@@ -88,15 +83,15 @@ pub fn EMA(args: EMA_Args) -> DataTransformer<EMA_Args> {
         // apply moving averge to lazy frame
         let working_lf = lf
             .with_columns([
-                col(in_col.as_str())
+                col(in_col)
                     .rolling_mean(options)
-                    .alias(out_col.as_str())
+                    .alias(out_col)
             ]);
         
         Ok(working_lf)
     };
 
-     DataTransformer::new("EMA".into(), ema_transformer, Some(args))
+     DataTransformer::new("EMA".into(), ema_transformer, args)
 }
 
 #[allow(non_snake_case, dead_code)]
@@ -105,11 +100,11 @@ pub fn TRIPLE_MA_TREND(args: TripleMaTrenendArgs) -> DataTransformer<TripleMaTre
     let triple_ma_trend_transformer: ExecutorFn<TripleMaTrenendArgs> = |lf, args| {
     
         // unpack args
-        let in_col: String = args.in_col.unwrap_or("close".to_string());
+        let in_col = args.in_col.as_deref().unwrap_or("close");
         let fast_period: i64 = args.fast_period.unwrap_or(50);
         let medium_period: i64 = args.medium_period.unwrap_or(100);
-        let slow_period: i64 = args.slow_period.unrap_or(200);
-        let ma_type: String = args.ma_type.unwrap_or("sma".to_string());
+        let slow_period: i64 = args.slow_period.unwrap_or(200);
+        let ma_type  = args.ma_type.as_deref().unwrap_or("sma");
         
         // setup moving average parameters
         let mut slow_options = RollingOptions::default();
@@ -150,13 +145,13 @@ pub fn TRIPLE_MA_TREND(args: TripleMaTrenendArgs) -> DataTransformer<TripleMaTre
         // apply moving averge to lazy frame
         let working_lf = lf
             .with_columns([
-                col(in_col.as_str())
+                col(in_col)
                     .rolling_mean(fast_options)
                     .alias("fast_ma"),
-                col(in_col.as_str())
+                col(in_col)
                     .rolling_mean(medium_options)
                     .alias("medium_ma"),
-                col(in_col.as_str())
+                col(in_col)
                     .rolling_mean(slow_options)
                     .alias("slow_ma"),
             ])

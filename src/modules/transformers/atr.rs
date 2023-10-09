@@ -5,7 +5,7 @@ use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerA
 /**************************************************** ARG TYPES ****************************************************/
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
-pub struct ATR_Args{
+pub struct AtrArgs{
     pub period: Option<i64>,
     pub out_col: Option<String>,
 }
@@ -13,24 +13,24 @@ pub struct ATR_Args{
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub struct CandleAtrArgs{
-    pub in_col: Option<String>,
+    pub atr_col: String,
     pub high_level: Option<String>,
     pub low_level: Option<String>,
     pub out_col: Option<String>,
 }
 
-impl TransformerArgs for ATR_Args{}
+impl TransformerArgs for AtrArgs{}
 impl TransformerArgs for CandleAtrArgs{}
 
 /**************************************************** TRANSFORMERS ****************************************************/
 
 #[allow(non_snake_case, dead_code)]
-pub fn ATR(args: ATR_Args) -> DataTransformer<ATR_Args> {
-    let atr_transformer: ExecutorFn = |lf, args| {
+pub fn ATR(args: AtrArgs) -> DataTransformer<AtrArgs> {
+    let atr_transformer: ExecutorFn<AtrArgs> = |lf, args| {
     
         // unpack args
         let period: i64 = args.period.unwrap_or(50);
-        let out_col: String = args.out_col.unwrap_or("atr".to_string());
+        let out_col = args.out_col.as_deref().unwrap_or("atr");
         
         let mut options = RollingOptions::default();
         options.window_size = Duration::new(period);
@@ -81,10 +81,10 @@ pub fn CANDLE_ATR(args: CandleAtrArgs) -> DataTransformer<CandleAtrArgs> {
     let candle_atr_transformer: ExecutorFn<CandleAtrArgs> = |lf, args| {
     
         // unpack args
-        let atr_col: String = args.atr_col.unwrap_or("atr".to_string());
-        let high_level: String = args.atr_col.unwrap_or("high".to_string());
-        let low_level: String = args.atr_col.unwrap_or("low".to_string());
-        let out_col: String = args.atr_col.unwrap_or("candle_atr".to_string());
+        let atr_col  = args.atr_col.as_str();
+        let high_level = args.high_level.as_deref().unwrap_or("high");
+        let low_level = args.low_level.as_deref().unwrap_or("low");
+        let out_col = args.out_col.as_deref().unwrap_or("candle_atr");
 
 
         let working_lf = lf.clone()
