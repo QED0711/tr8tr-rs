@@ -1,14 +1,35 @@
 use polars::{prelude::*, series::ops::NullBehavior};
-use crate::modules::data_transformer::{DataTransformer, FailedTransformationErr, Args};
+use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerArgs};
 
+/**************************************************** ARG TYPES ****************************************************/
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct RsiArgs{
+    pub in_col: Option<String>,
+    pub out_col: Option<String>,
+    pub period: Option<i64>,
+}
+
+pub struct RsiDivergenceArgs{
+    pub in_col: Option<String>,
+    pub out_col: Option<String>,
+    pub lookback: Option<i64>,
+    pub significance: Option<i64>,
+}
+
+
+impl TransformerArgs for RsiArgs{}
+impl TransformerArgs for RsiDivergenceArgs{}
+
+/**************************************************** TRANSFORMERS ****************************************************/
 #[allow(non_snake_case, dead_code)]
-pub fn RSI(args: Args) -> DataTransformer {
-    fn rsi_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn RSI(args: RsiArgs) -> DataTransformer<RsiArgs> {
+    let rsi_transformer: ExecutorFn<RsiArgs> = |lf, args| {
     
         // unpack args
-        let in_col: String = args.get("in_col", "close".to_string());
-        let out_col: String = args.get("out_col", "rsi".to_string());
-        let period: i64 = args.get("period", 14);
+        let in_col = args.in_col.unwrap_or("close".to_string());
+        let out_col = args.out_col.unwrap_or("rsi".to_string());
+        let period = args.period.unwrap_or(14);
         
         // setup moving average parameters
         let mut options = RollingOptions::default();
@@ -52,7 +73,7 @@ pub fn RSI(args: Args) -> DataTransformer {
             .drop_columns(&["price_change", "gain", "loss", "avg_gain", "avg_loss", "rs"]);
         
         Ok(working_lf)
-    }
+    };
 
      DataTransformer::new("RSI".into(), rsi_transformer, Some(args))
 }
@@ -61,13 +82,13 @@ pub fn RSI(args: Args) -> DataTransformer {
 
 
 #[allow(non_snake_case, dead_code)]
-pub fn RSI_DIVERGENCE(args: Args) -> DataTransformer {
-    fn rsi_divergence_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn RSI_DIVERGENCE(args: RsiDivergenceArgs) -> DataTransformer<RsiDivergenceArgs> {
+    let rsi_divergence_transformer: ExecutorFn<RsiDivergenceArgs> = |lf, args| {
 
-        let rsi_col: String = args.get("rsi_col", "rsi".to_string());
-        let out_col: String = args.get("out_col", "rsi_divergence".to_string());
-        let lookback: i64 = args.get("lookback", 5);
-        let significance: f64= args.get("significance", 0.02);
+        let rsi_col: String = args.rsi_col.unwrap_or("rsi".to_string());
+        let out_col: String = args.out_col.unwrap_or("rsi_divergence".to_string());
+        let lookback: i64 = args.lookback.unwrap_or(5);
+        let significance: f64 = args.significance.unwrap_or(0.02);
 
         let working_lf = lf
             .with_column(
@@ -127,6 +148,6 @@ pub fn RSI_DIVERGENCE(args: Args) -> DataTransformer {
 
         Ok(working_lf)
 
-    }
-    DataTransformer::new("RSI".into(), rsi_divergence_transformer, Some(args))
+    };
+    DataTransformer::new("RSI".into(), rsi_divergence_transformer, args)
 }

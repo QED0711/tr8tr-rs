@@ -1,14 +1,36 @@
 
 use polars::prelude::*;
-use crate::modules::data_transformer::{DataTransformer, FailedTransformationErr, Args};
+use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerArgs};
+
+/**************************************************** ARG TYPES ****************************************************/
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct ATR_Args{
+    pub period: Option<i64>,
+    pub out_col: Option<String>,
+}
+
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct CandleAtrArgs{
+    pub in_col: Option<String>,
+    pub high_level: Option<String>,
+    pub low_level: Option<String>,
+    pub out_col: Option<String>,
+}
+
+impl TransformerArgs for ATR_Args{}
+impl TransformerArgs for CandleAtrArgs{}
+
+/**************************************************** TRANSFORMERS ****************************************************/
 
 #[allow(non_snake_case, dead_code)]
-pub fn ATR(args: Args) -> DataTransformer {
-    fn atr_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn ATR(args: ATR_Args) -> DataTransformer<ATR_Args> {
+    let atr_transformer: ExecutorFn = |lf, args| {
     
         // unpack args
-        let period: i64 = args.get("period", 50);
-        let out_col: String = args.get("out_col", "atr".to_string());
+        let period: i64 = args.period.unwrap_or(50);
+        let out_col: String = args.out_col.unwrap_or("atr".to_string());
         
         let mut options = RollingOptions::default();
         options.window_size = Duration::new(period);
@@ -48,22 +70,22 @@ pub fn ATR(args: Args) -> DataTransformer {
             ;
 
         Ok(working_lf)
-    }
+    };
 
-     DataTransformer::new("ATR".into(), atr_transformer, Some(args))
+     DataTransformer::new("ATR".into(), atr_transformer, args)
 }
 
 
 #[allow(non_snake_case, dead_code)]
-pub fn CANDLE_ATR(args: Args) -> DataTransformer {
-    fn candle_atr_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn CANDLE_ATR(args: CandleAtrArgs) -> DataTransformer<CandleAtrArgs> {
+    let candle_atr_transformer: ExecutorFn<CandleAtrArgs> = |lf, args| {
     
         // unpack args
-        let atr_col: String = args.get("atr_col", "atr".to_string());
-        let high_level: String = args.get("high_level", "high".to_string());
-        let low_level: String = args.get("low_level", "low".to_string());
-        let out_col: String = args.get("out_col", "candle_atr".to_string());
-        
+        let atr_col: String = args.atr_col.unwrap_or("atr".to_string());
+        let high_level: String = args.atr_col.unwrap_or("high".to_string());
+        let low_level: String = args.atr_col.unwrap_or("low".to_string());
+        let out_col: String = args.atr_col.unwrap_or("candle_atr".to_string());
+
 
         let working_lf = lf.clone()
             .with_column(
@@ -73,7 +95,7 @@ pub fn CANDLE_ATR(args: Args) -> DataTransformer {
             ;
 
         Ok(working_lf)
-    }
+    };
 
-     DataTransformer::new("ATR".into(), candle_atr_transformer, Some(args))
+     DataTransformer::new("ATR".into(), candle_atr_transformer, args)
 }

@@ -1,14 +1,46 @@
 use polars::prelude::*;
-use crate::modules::data_transformer::{DataTransformer, FailedTransformationErr, Args};
+use crate::modules::data_transformer::{DataTransformer, TransformerArgs, ExecutorFn};
+
+/**************************************************** ARG TYPES ****************************************************/
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct SMA_Args{
+    pub in_col: Option<String>,
+    pub out_col: Option<String>,
+    pub period: Option<i64>
+}
+
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct EMA_Args{
+    pub in_col: Option<String>,
+    pub out_col: Option<String>,
+    pub period: Option<i64>
+}
+
+#[derive(Debug)]
+pub struct TripleMaTrenendArgs{
+    pub in_col: Option<String>,
+    pub fast_period: Option<i64>,
+    pub medium_period: Option<i64>,
+    pub slow_period: Option<i64>,
+    pub ma_type: Option<String>,
+}
+
+impl TransformerArgs for SMA_Args{}
+impl TransformerArgs for EMA_Args{}
+impl TransformerArgs for TripleMaTrenendArgs{}
+
+/**************************************************** TRANSFORMERS ****************************************************/
 
 #[allow(non_snake_case, dead_code)]
-pub fn SMA(args: Args) -> DataTransformer {
-    fn sma_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn SMA(args: SMA_Args) -> DataTransformer<SMA_Args> {
+    let sma_transformer: ExecutorFn<SMA_Args> = |lf, args| {
     
         // unpack args
-        let in_col: String = args.get("in_col", "close".to_string());
-        let out_col: String = args.get("out_col", "sma".to_string());
-        let period: i64 = args.get("period", 50);
+        let in_col = args.in_col.unwrap_or("close".to_string());
+        let out_col = args.out_col.unwrap_or("sma".to_string());
+        let period = args.period.unwrap_or(50);
         
         // setup moving average parameters
         let mut options = RollingOptions::default();
@@ -24,21 +56,22 @@ pub fn SMA(args: Args) -> DataTransformer {
             ]);
         
         Ok(working_lf)
-    }
+    };
 
-     DataTransformer::new("SMA".into(), sma_transformer, Some(args))
+     DataTransformer::new("SMA".into(), sma_transformer, args)
 }
 
-
-
 #[allow(non_snake_case, dead_code)]
-pub fn EMA(args: Args) -> DataTransformer {
-    fn ema_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn EMA(args: EMA_Args) -> DataTransformer<EMA_Args> {
+    let ema_transformer: ExecutorFn<EMA_Args> = |lf, args| {
     
         // unpack args
-        let in_col: String = args.get("in_col", "close".to_string());
-        let out_col: String = args.get("out_col", "ema".to_string());
-        let period: i64 = args.get("period", 50);
+        let in_col = args.in_col.unwrap_or("close".to_string());
+        let out_col = args.out_col.unwrap_or("sma".to_string());
+        let period = args.period.unwrap_or(50);
+        // let in_col: String = args.get("in_col", "close".to_string());
+        // let out_col: String = args.get("out_col", "ema".to_string());
+        // let period: i64 = args.get("period", 50);
         
         // calculate weights for exponential moving average
         let alpha = 2.0 / (period as f64 + 1.0);
@@ -61,21 +94,22 @@ pub fn EMA(args: Args) -> DataTransformer {
             ]);
         
         Ok(working_lf)
-    }
+    };
 
      DataTransformer::new("EMA".into(), ema_transformer, Some(args))
 }
 
 #[allow(non_snake_case, dead_code)]
-pub fn TRIPLE_MA_TREND(args: Args) -> DataTransformer {
-    fn triple_ma_trend_transformer(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn TRIPLE_MA_TREND(args: TripleMaTrenendArgs) -> DataTransformer<TripleMaTrenendArgs> {
+    
+    let triple_ma_trend_transformer: ExecutorFn<TripleMaTrenendArgs> = |lf, args| {
     
         // unpack args
-        let in_col: String = args.get("in_col", "close".to_string());
-        let fast_period: i64 = args.get("fast_period", 50);
-        let medium_period: i64 = args.get("medium_period", 100);
-        let slow_period: i64 = args.get("slow_period", 200);
-        let ma_type: String = args.get("ma_type", "sma".to_string());
+        let in_col: String = args.in_col.unwrap_or("close".to_string());
+        let fast_period: i64 = args.fast_period.unwrap_or(50);
+        let medium_period: i64 = args.medium_period.unwrap_or(100);
+        let slow_period: i64 = args.slow_period.unrap_or(200);
+        let ma_type: String = args.ma_type.unwrap_or("sma".to_string());
         
         // setup moving average parameters
         let mut slow_options = RollingOptions::default();
@@ -142,8 +176,8 @@ pub fn TRIPLE_MA_TREND(args: Args) -> DataTransformer {
             ;
         
         Ok(working_lf)
-    }
+    };
 
-     DataTransformer::new("TRIPLE_MA_TREND".into(), triple_ma_trend_transformer, Some(args))
+     DataTransformer::new("TRIPLE_MA_TREND".into(), triple_ma_trend_transformer, args)
 
 }

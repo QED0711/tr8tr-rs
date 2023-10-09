@@ -1,16 +1,26 @@
 use polars::{prelude::*, series::ops::NullBehavior};
-use crate::modules::data_transformer::{DataTransformer, FailedTransformationErr, Args};
+use crate::modules::data_transformer::{DataTransformer, TransformerArgs, ExecutorFn};
+
+
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct CandlePatternArgs{
+    pub color_col_col: Option<String>,
+    pub pattern_out_col: Option<String>,
+    pub color_out_col: Option<String>
+}
+
+impl TransformerArgs for CandlePatternArgs {}
 
 #[allow(non_snake_case, dead_code)]
-pub fn CANDLE_PATTERN(args: Args) -> DataTransformer {
-    fn candle_pattern(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn CANDLE_PATTERN(args: CandlePatternArgs) -> DataTransformer<CandlePatternArgs> {
+
+    let candle_pattern: ExecutorFn<CandlePatternArgs> = |lf: LazyFrame, args| {
     
         // unpack args
-        // let in_col: String = args.get("in_col", "close".to_string());
-        let color_out_col: String = args.get("color_out_col", "candle_color".to_string());
-        let pattern_out_col: String = args.get("pattern_out_col", "candle_pattern".to_string());
-        let score_out_col: String = args.get("score_out_col", "candle_pattern_score".to_string());
-        // let period: i64 = args.get("period", 14);
+        let color_out_col: String = args.color_out_col.unwrap_or("candle_color".to_string());
+        let pattern_out_col: String = args.pattern_out_col.unwrap_or("candle_pattern".to_string());
+        let score_out_col: String = args.score_out_col.unwrap_or("candle_pattern_score".to_string());
 
         let working_lf = lf
             .with_column(
@@ -133,7 +143,7 @@ pub fn CANDLE_PATTERN(args: Args) -> DataTransformer {
         
         
         Ok(working_lf)
-    }
+    };
 
      DataTransformer::new("candle_pattern".into(), candle_pattern, Some(args))
 }

@@ -32,23 +32,25 @@ impl Args {
     }
 }
 
+pub trait TransformerArgs {}
+
 pub type FailedTransformationErr = polars::error::PolarsError;
 // ExecutorFn must return a new (owned) DataFrame object to avoid lifetime issues
-pub type ExecutorFn = fn(LazyFrame, &Args) -> Result<LazyFrame, FailedTransformationErr>;
+pub type ExecutorFn<T: TransformerArgs> = fn(LazyFrame, &T) -> Result<LazyFrame, FailedTransformationErr>;
 
 #[derive(Debug)]
-pub struct DataTransformer {
+pub struct DataTransformer<T: TransformerArgs> {
     pub name: String,
-    pub executor: ExecutorFn,
-    pub args: Args,
+    pub executor: ExecutorFn<T>,
+    pub args: T,
 }
 
-impl DataTransformer {
-    pub fn new(name: String, executor: ExecutorFn, args: Option<Args>) -> DataTransformer {
+impl<T:TransformerArgs> DataTransformer<T> {
+    pub fn new(name: String, executor: ExecutorFn<T>, args: T ) -> DataTransformer<T> {
         DataTransformer {
             name,
             executor,
-            args: args.unwrap_or_else(Args::new)
+            args, 
         }
     }
 
