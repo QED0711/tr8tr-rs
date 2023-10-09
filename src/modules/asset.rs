@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use polars::prelude::*;
 
 // mod modules;
-use super::data_transformer::DataTransformer;
+use super::data_transformer::{DataTransformer, TransformerSequence};
 
 #[derive(Debug)]
 pub struct Asset {
     pub df: Option<DataFrame>,
     pub symbol: Option<String>,
-    pub transformers: Vec<DataTransformer>,
+    pub transformers: TransformerSequence,
     dtypes: HashMap<String, DataType>,
 }
 
@@ -22,7 +22,7 @@ pub struct Asset {
 impl Asset {
     /***** UTILITY *****/
     fn new() -> Asset {
-        Asset{df: None, symbol: None, transformers: vec![], dtypes: HashMap::new()}
+        Asset{df: None, symbol: None, transformers: TransformerSequence::new(), dtypes: HashMap::new()}
     }
 
     /***** DATAFRAME *****/
@@ -104,20 +104,29 @@ impl Asset {
 
 
     /***** TRANSFORMERS *****/
-    pub fn set_transformers(&mut self, transformers: Vec<DataTransformer>) {
-        self.transformers = transformers;
-    }
+    // pub fn set_transformers(&mut self, transformers: Vec<DataTransformer>) {
+    //     self.transformers = transformers;
+    // }
 
-    #[allow(dead_code)]
-    pub fn list_transformers(&self) {
-        println!("{:?}", self.transformers);
-    }
+    // #[allow(dead_code)]
+    // pub fn list_transformers(&self) {
+    //     println!("{:?}", self.transformers);
+    // }
 
     pub fn apply_transformers(&mut self) {
         let mut transformed_lf: LazyFrame = self.df.clone().unwrap().lazy();
-        for transformer in &self.transformers {
-            transformed_lf = transformer.apply(transformed_lf).unwrap();
+        for i in 0..self.transformers.length {
+            transformed_lf = self
+                .transformers
+                .transformers
+                .get(&i)
+                .unwrap()
+                .apply(transformed_lf)
+                .unwrap();
         }
+        // for transformer in &self.transformers {
+        //     transformed_lf = transformer.apply(transformed_lf).unwrap();
+        // }
         self.df = Some(
             transformed_lf
                 .collect()

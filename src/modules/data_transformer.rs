@@ -53,8 +53,33 @@ impl<T:TransformerArgs> DataTransformer<T> {
             args, 
         }
     }
+}
 
-    pub fn apply(&self, lf: LazyFrame) -> Result<LazyFrame, FailedTransformationErr> {
+pub trait TransformerObj {
+    fn apply(&self, lf: LazyFrame) -> Result<LazyFrame, FailedTransformationErr>;
+}
+
+impl<T: TransformerArgs> TransformerObj for DataTransformer<T> {
+    fn apply(&self, lf: LazyFrame) -> Result<LazyFrame, FailedTransformationErr> {
         (self.executor)(lf, &self.args)
+    }
+}
+
+pub struct TransformerSequence {
+    pub transformers: HashMap<usize, Box<dyn TransformerObj>>,
+    pub length: usize,
+}
+
+impl TransformerSequence {
+    pub fn new() -> Self {
+        Self {transformers: HashMap::new(), length: 0}
+    }    
+
+    pub fn append<T: TransformerArgs + 'static>(&mut self, transformer: DataTransformer<T>) -> &mut Self {
+
+        self.transformers.insert(self.length, Box::new(transformer));
+        self.length += 1;
+
+        self
     }
 }
