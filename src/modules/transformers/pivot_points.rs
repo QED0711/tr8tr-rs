@@ -1,13 +1,25 @@
 use polars::{prelude::*, series::ops::NullBehavior};
-use crate::modules::data_transformer::{DataTransformer, FailedTransformationErr, Args};
+use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerArgs};
+
+/**************************************************** ARG TYPES ****************************************************/
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct WeeklyPivotPointArgs{
+    pub time_col: Option<String>,
+    pub out_col_prefix: Option<String>,
+}
+
+impl TransformerArgs for WeeklyPivotPointArgs{}
+
+/**************************************************** TRANSFORMERS ****************************************************/
 
 #[allow(non_snake_case, dead_code)]
-pub fn WEEKLY_PIVOT_POINTS(args: Args) -> DataTransformer {
-    fn weekly_pivot_points(lf: LazyFrame, args: &Args) -> Result<LazyFrame, FailedTransformationErr> {
+pub fn WEEKLY_PIVOT_POINTS(args: WeeklyPivotPointArgs) -> DataTransformer<WeeklyPivotPointArgs> {
+    let weekly_pivot_points: ExecutorFn<WeeklyPivotPointArgs> = |lf, args| {
     
         // unpack args
-        let time_col: String = args.get("time_col", "time".to_string());
-        let out_col_prefix = args.get("out_col_prefix", "".to_string());
+        let time_col = args.time_col.as_deref().unwrap_or("time");
+        let out_col_prefix = args.out_col_prefix.as_deref().unwrap_or("");
         
         let working_lf = lf
             .with_column(
@@ -54,9 +66,9 @@ pub fn WEEKLY_PIVOT_POINTS(args: Args) -> DataTransformer {
             ;
         
         Ok(working_lf)
-    }
+    };
 
-     DataTransformer::new("weekly_pivot_points".into(), weekly_pivot_points, Some(args))
+     DataTransformer::new("weekly_pivot_points".into(), weekly_pivot_points, args)
 }
 
 

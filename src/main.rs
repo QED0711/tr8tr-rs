@@ -6,7 +6,6 @@ use plotters::prelude::*;
 use polars::prelude::*;
 
 use modules::asset::Asset;
-use modules::data_transformer::Args;
 use modules::chart;
 
 use crate::modules::data_transformer::DataTransformer;
@@ -18,61 +17,83 @@ fn main() {
     let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
     asset.trim_tail(1); // cut off n rows from the tail
 
-    let mut sma_args = Args::new();
-    sma_args.insert("out_col".into(), "sma_50".to_string());
-    sma_args.insert("period".into(), 50i64);
+    let sma_args = transformers::moving_averages::SmaArgs{
+        in_col: None, 
+        out_col: Some("sma_50".to_string()), 
+        period: Some(50)
+    };
     
-    let mut ema_args = Args::new();
-    ema_args.insert("out_col".into(), "ema_50".to_string());
-    ema_args.insert("period".into(), 50i64);
+    let ema_args = transformers::moving_averages::EmaArgs{
+        in_col: None, 
+        out_col: Some("ema_50".to_string()),
+        period: Some(50),
+    };
 
-    let mut ma_trend_args: Args = Args::new();
-    ma_trend_args.insert("fast_period".into(), 50i64);
-    ma_trend_args.insert("medium_period".into(), 100i64);
-    ma_trend_args.insert("slow_period".into(), 200i64);
-    ma_trend_args.insert("ma_type".into(), "ema".to_string());
+    let ma_trend_args = transformers::moving_averages::TripleMaTrenendArgs{
+        in_col: None,
+        fast_period: Some(50),
+        medium_period: Some(100),
+        slow_period: Some(300),
+        ma_type: Some("ema".to_string()),
+    };
 
-    let mut rsi_args = Args::new();
-    rsi_args.insert("out_col".into(), "rsi");
-    rsi_args.insert("period".into(), 14i64);
+    let rsi_args = transformers::rsi::RsiArgs{
+        in_col: None,
+        out_col: Some("rsi".to_string()),
+        period: Some(14),
+    };
 
-    let mut rsi_divergence_args: Args = Args::new();
-    rsi_divergence_args.insert("lookback".into(), 12i64);
-    rsi_divergence_args.insert("significance".into(), 0.02f64);
+    let rsi_divergence_args = transformers::rsi::RsiDivergenceArgs{
+        rsi_col: "rsi".to_string(), 
+        out_col: Some("rsi_divergence".to_string()),
+        lookback: Some(12),
+        significance: Some(0.02),
+    };
 
-    let mut pivot_point_args: Args = Args::new();    
-    pivot_point_args.insert("time_col".into(), "time".to_string());
+    let pivot_point_args = transformers::pivot_points::WeeklyPivotPointArgs{
+        time_col: None,
+        out_col_prefix: None,
+    };    
 
-    let mut atr_args: Args = Args::new();
-    atr_args.insert("period".into(), 14i64);
+    let atr_args = transformers::atr::AtrArgs{
+        period: Some(14),
+        out_col: Some("atr".to_string()),
+    };
 
-    let mut candle_atr_args: Args = Args::new();
-    candle_atr_args.insert("low_level".into(), "open");
-    candle_atr_args.insert("high_level".into(), "close");
+    let candle_atr_args = transformers::atr::CandleAtrArgs{
+        atr_col: "atr".to_string(),
+        low_level: Some("open".to_string()),
+        high_level: Some("close".to_string()),
+        out_col: Some("candle_atr".to_string()),
+    };
 
-    let candle_pattern_args = Args::new();
+    let candle_pattern_args = transformers::candle_patterns::CandlePatternArgs{
+        color_out_col: Some("candle_color".to_string()),
+        pattern_out_col: Some("candle_pattern".to_string()),
+        score_out_col: Some("candle_pattern_score".to_string()),
+    };
 
     let sma_50 = transformers::moving_averages::SMA(sma_args);
     let ema_50 = transformers::moving_averages::EMA(ema_args);
     let triple_ma_trend = transformers::moving_averages::TRIPLE_MA_TREND(ma_trend_args);
     let rsi_14 = transformers::rsi::RSI(rsi_args);
-    let rsi_divergence: DataTransformer = transformers::rsi::RSI_DIVERGENCE(rsi_divergence_args);
-    let pivot_points: DataTransformer = transformers::pivot_points::WEEKLY_PIVOT_POINTS(pivot_point_args);
-    let atr: DataTransformer = transformers::atr::ATR(atr_args);
-    let candle_atr: DataTransformer = transformers::atr::CANDLE_ATR(candle_atr_args);
+    let rsi_divergence = transformers::rsi::RSI_DIVERGENCE(rsi_divergence_args);
+    let pivot_points = transformers::pivot_points::WEEKLY_PIVOT_POINTS(pivot_point_args);
+    let atr = transformers::atr::ATR(atr_args);
+    let candle_atr = transformers::atr::CANDLE_ATR(candle_atr_args);
     let candle_pattern = transformers::candle_patterns::CANDLE_PATTERN(candle_pattern_args);
-
-    asset.set_transformers(vec![
-        sma_50,
-        ema_50,
-        triple_ma_trend,
-        rsi_14,
-        rsi_divergence,
-        pivot_points,
-        atr,
-        candle_atr,
-        candle_pattern,
-    ]);
+    
+    let _ = asset.transformers 
+        .append(sma_50)
+        .append(ema_50)
+        .append(triple_ma_trend)
+        .append(rsi_14)
+        .append(rsi_divergence)
+        .append(pivot_points)
+        .append(atr)
+        .append(candle_atr)
+        .append(candle_pattern)
+        ;
 
     asset.apply_transformers();
 
