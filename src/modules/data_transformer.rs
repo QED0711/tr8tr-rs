@@ -7,31 +7,6 @@ use core::fmt::Debug;
 ***** UTILITY TYPES ***** 
 *************************
  */
-// #[derive(Debug)]
-// pub struct Args(HashMap<String, Box<dyn std::any::Any>>);
-
-// impl Args {
-//     pub fn new() -> Self {
-//         Args(HashMap::new())
-//     }
-
-//     pub fn insert<T: 'static>(&mut self, key: String, value: T) {
-//         self.0.insert(key, Box::new(value));
-//     }
-
-//     pub fn get<T: 'static + Clone>(&self, key: &str, default: T) -> T {
-//         match self.0.get(key) {
-//             Some(val) => {
-//                 if let Some(actual_val) = val.downcast_ref::<T>() {
-//                     actual_val.clone()
-//                 } else {
-//                     default
-//                 }
-//             },
-//             None => default
-//         }
-//     }
-// }
 
 pub trait TransformerArgs {}
 

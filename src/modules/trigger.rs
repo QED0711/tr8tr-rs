@@ -2,6 +2,7 @@ use polars::prelude::PolarsError;
 
 use super::asset::Asset;
 
+#[derive(Debug)]
 pub struct TriggerResponse {
     pub id: Option<String>,
     pub symbol: Option<String>,

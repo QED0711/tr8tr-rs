@@ -16,11 +16,12 @@ impl Notifier {
         }
     }
 
-    pub fn set_triggers(&mut self, triggers: Vec<Trigger>) {
-        self.triggers = triggers;
+    pub fn append_trigger(&mut self, trigger: Trigger) -> &mut Self {
+        self.triggers.push(trigger);
+        self
     }
 
-    pub fn evaluate_triggers(&mut self, asset: Asset) {
+    pub fn evaluate_triggers(&mut self, asset: &Asset) {
         for trigger in &self.triggers {
             let resp = trigger.evaluate(&asset);
             if resp.direction != "HOLD" && !self.triggered_ids.iter().any(|el| resp.id.clone().expect("id was None while direction was BUY or SELL").contains(el)) {

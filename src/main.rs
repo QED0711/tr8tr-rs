@@ -2,6 +2,8 @@ mod modules;
 
 use modules::transformers;
 use modules::triggers;
+use modules::notifiers;
+use modules::notifier::Notifier;
 use plotters::prelude::*;
 use polars::prelude::*;
 
@@ -10,6 +12,7 @@ use modules::chart;
 
 use crate::modules::data_transformer::DataTransformer;
 use crate::modules::transformers::pivot_points::WEEKLY_PIVOT_POINTS;
+use crate::modules::triggers::test;
 
 fn main() {
 
@@ -97,10 +100,22 @@ fn main() {
 
     asset.apply_transformers();
 
+    // TRIGGERS
     let weekly_pivot_trigger = triggers::sr_bounce::WEEKLY_PIVOT_BOUNCE();
+    let test_buy = triggers::test::TEST_BUY();
+    let test_sell = triggers::test::TEST_SELL();
+
+    // NOTIFIER
+    let mut notifier= notifiers::print_notifier::PRINT();
+    let _ = notifier
+        .append_trigger(weekly_pivot_trigger)
+        .append_trigger(test_buy)
+        .append_trigger(test_sell);
+    
+    notifier.evaluate_triggers(&asset);
 
     // for testing:
-    weekly_pivot_trigger.evaluate(&asset);
+    // weekly_pivot_trigger.evaluate(&asset);
 
     
     // let _ = chart::plot_columns(

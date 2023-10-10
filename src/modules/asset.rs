@@ -104,14 +104,6 @@ impl Asset {
 
 
     /***** TRANSFORMERS *****/
-    // pub fn set_transformers(&mut self, transformers: Vec<DataTransformer>) {
-    //     self.transformers = transformers;
-    // }
-
-    // #[allow(dead_code)]
-    // pub fn list_transformers(&self) {
-    //     println!("{:?}", self.transformers);
-    // }
 
     pub fn apply_transformers(&mut self) {
         let mut transformed_lf: LazyFrame = self.df.clone().unwrap().lazy();
