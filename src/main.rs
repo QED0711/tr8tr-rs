@@ -6,6 +6,7 @@ use modules::notifiers;
 use modules::notifier::Notifier;
 use plotters::prelude::*;
 use polars::prelude::*;
+use clap::Parser;
 
 use modules::asset::Asset;
 use modules::chart;
@@ -14,8 +15,22 @@ use crate::modules::data_transformer::DataTransformer;
 use crate::modules::transformers::pivot_points::WEEKLY_PIVOT_POINTS;
 use crate::modules::triggers::test;
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value = "/app/data/")]
+    path: String,
+    #[arg(short, long)]
+    symbol: String
+
+}
+
+
+
 fn main() {
 
+    let args = Args::parse();
+    
     // instantiate asset from a csv
     let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
     asset.trim_tail(1); // cut off n rows from the tail
@@ -113,7 +128,7 @@ fn main() {
         .append_trigger(test_sell);
     
     notifier.evaluate_triggers(&asset);
-
+    
     // for testing:
     // weekly_pivot_trigger.evaluate(&asset);
 
