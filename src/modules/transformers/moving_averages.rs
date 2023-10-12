@@ -2,21 +2,21 @@ use polars::prelude::*;
 use crate::modules::data_transformer::{DataTransformer, TransformerArgs, ExecutorFn};
 
 /**************************************************** ARG TYPES ****************************************************/
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SmaArgs{
     pub in_col: Option<String>,
     pub out_col: Option<String>,
     pub period: Option<i64>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EmaArgs{
     pub in_col: Option<String>,
     pub out_col: Option<String>,
     pub period: Option<i64>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TripleMaTrenendArgs{
     pub in_col: Option<String>,
     pub fast_period: Option<i64>,

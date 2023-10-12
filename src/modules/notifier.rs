@@ -24,6 +24,7 @@ impl Notifier {
     pub fn evaluate_triggers(&mut self, asset: &Asset) {
         for trigger in &self.triggers {
             let resp = trigger.evaluate(&asset);
+            println!("{:?}", resp);
             if resp.direction != "HOLD" && !self.triggered_ids.iter().any(|el| resp.id.clone().expect("id was None while direction was BUY or SELL").contains(el)) {
                 self.triggered_ids.push(resp.id.clone().expect("id was None while direction was BUY or SELL"));
                 (self.executor)(resp)

@@ -14,7 +14,7 @@ pub type FailedTransformationErr = polars::error::PolarsError;
 // ExecutorFn must return a new (owned) DataFrame object to avoid lifetime issues
 pub type ExecutorFn<T> = fn(LazyFrame, &T) -> Result<LazyFrame, FailedTransformationErr>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DataTransformer<T: TransformerArgs> {
     pub name: String,
     pub executor: ExecutorFn<T>,

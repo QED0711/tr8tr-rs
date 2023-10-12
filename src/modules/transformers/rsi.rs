@@ -2,14 +2,14 @@ use polars::{prelude::*, series::ops::NullBehavior};
 use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerArgs};
 
 /**************************************************** ARG TYPES ****************************************************/
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RsiArgs{
     pub in_col: Option<String>,
     pub out_col: Option<String>,
     pub period: Option<i64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RsiDivergenceArgs{
     pub rsi_col: String,
     pub out_col: Option<String>,

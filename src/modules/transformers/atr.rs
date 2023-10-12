@@ -3,14 +3,14 @@ use polars::prelude::*;
 use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerArgs};
 
 /**************************************************** ARG TYPES ****************************************************/
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 pub struct AtrArgs{
     pub period: Option<i64>,
     pub out_col: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 pub struct CandleAtrArgs{
     pub atr_col: String,

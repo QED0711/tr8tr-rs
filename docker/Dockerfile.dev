@@ -15,15 +15,15 @@ RUN groupadd -g $GID user && \
 
 RUN usermod -aG sudo $USERNAME
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER $USERNAME
 
 WORKDIR /home/$USERNAME/app/
+RUN sudo chown -R $(id -u):$(id -g) /home/$USERNAME/
 
 # Copy the Cargo.toml and Cargo.lock to fetch dependencies
 COPY Cargo.toml Cargo.lock ./
-RUN mkdir src
 # Create a dummy main.rs to satisfy the build for dependency fetching.
 # This step helps with Docker caching so you don't re-download dependencies unless the Cargo files change.
-RUN echo "fn main() {}" > src/main.rs
+RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build
 
-USER $USERNAME

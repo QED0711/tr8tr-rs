@@ -2,7 +2,7 @@ use polars::{prelude::*, series::ops::NullBehavior};
 use crate::modules::data_transformer::{DataTransformer, ExecutorFn, TransformerArgs};
 
 /**************************************************** ARG TYPES ****************************************************/
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 pub struct WeeklyPivotPointArgs{
     pub time_col: Option<String>,

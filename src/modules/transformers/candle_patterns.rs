@@ -2,7 +2,7 @@ use polars::prelude::*;
 use crate::modules::data_transformer::{DataTransformer, TransformerArgs, ExecutorFn};
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 pub struct CandlePatternArgs{
     pub color_out_col: Option<String>,

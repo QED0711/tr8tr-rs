@@ -18,10 +18,10 @@ use crate::modules::triggers::test;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value = "/app/data/")]
+    #[arg(short, long, default_value = "~/app/data/")]
     path: String,
-    #[arg(short, long)]
-    symbol: String
+    // #[arg(short, long)]
+    // symbol: String
 
 }
 
@@ -29,12 +29,7 @@ struct Args {
 
 fn main() {
 
-    let args = Args::parse();
-    
-    // instantiate asset from a csv
-    let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
-    asset.trim_tail(1); // cut off n rows from the tail
-
+    // TRANSFORMERS
     let sma_args = transformers::moving_averages::SmaArgs{
         in_col: None, 
         out_col: Some("sma_50".to_string()), 
@@ -101,19 +96,6 @@ fn main() {
     let candle_atr = transformers::atr::CANDLE_ATR(candle_atr_args);
     let candle_pattern = transformers::candle_patterns::CANDLE_PATTERN(candle_pattern_args);
     
-    let _ = asset.transformers 
-        .append(sma_50)
-        .append(ema_50)
-        .append(triple_ma_trend)
-        .append(rsi_14)
-        .append(rsi_divergence)
-        .append(pivot_points)
-        .append(atr)
-        .append(candle_atr)
-        .append(candle_pattern)
-        ;
-
-    asset.apply_transformers();
 
     // TRIGGERS
     let weekly_pivot_trigger = triggers::sr_bounce::WEEKLY_PIVOT_BOUNCE();
@@ -126,8 +108,36 @@ fn main() {
         .append_trigger(weekly_pivot_trigger)
         .append_trigger(test_buy)
         .append_trigger(test_sell);
+
+    // ASSET INITIALIZATION
+    let cli_args = Args::parse();
+    let assets = Asset::from_csv_dir(cli_args.path).unwrap_or(Vec::new());
+    // let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
+
+    for mut asset in assets {
+        asset.trim_tail(1); // cut off n rows from the tail
     
-    notifier.evaluate_triggers(&asset);
+        let _ = asset.transformers 
+            .append(sma_50.clone())
+            .append(ema_50.clone())
+            .append(triple_ma_trend.clone())
+            .append(rsi_14.clone())
+            .append(rsi_divergence.clone())
+            .append(pivot_points.clone())
+            .append(atr.clone())
+            .append(candle_atr.clone())
+            .append(candle_pattern.clone());
+
+        asset.apply_transformers();
+        notifier.evaluate_triggers(&asset);
+
+    }
+
+
+    
+
+
+    
     
     // for testing:
     // weekly_pivot_trigger.evaluate(&asset);
@@ -158,9 +168,9 @@ fn main() {
     //     Some("plots/rsi_divergence.png"),
     // );
 
-    let df = asset.df.clone().unwrap();
-    println!("{:?}", df.get_column_names());
-    println!("{:?}", df);
+    // let df = asset.df.clone().unwrap();
+    // println!("{:?}", df.get_column_names());
+    // println!("{:?}", df);
     // asset.to_csv("./data/transformed/AUDUSD.csv".to_string());
 
 }

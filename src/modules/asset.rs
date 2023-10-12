@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs, path::Path};
 
 use polars::prelude::*;
 
@@ -28,7 +28,7 @@ impl Asset {
     /***** DATAFRAME *****/
     pub fn from_csv(path: String, symbol: Option<String>) -> Asset {
         let mut a = Asset::new();
-        let mut df = CsvReader::from_path(path)
+        let df = CsvReader::from_path(path)
                 .unwrap()
                 .has_header(true)
                 .with_try_parse_dates(true)
@@ -38,6 +38,31 @@ impl Asset {
         a.df = Some(df);
         a.symbol = symbol;
         a
+    }
+
+    pub fn from_csv_dir(root_path: String) -> Result<Vec<Asset>, std::io::Error> {
+        let mut csv_files = Vec::new();
+        for entry in fs::read_dir(Path::new(&root_path))? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("csv") {
+                csv_files.push(path.to_string_lossy().to_string());
+            }
+        }
+        
+        let mut assets: Vec<Asset> = Vec::new();
+        for csv_path in csv_files {
+            let symbol = Path::new(&csv_path)
+                .file_stem()
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+            assets.push(Asset::from_csv(csv_path, Some(symbol)));
+        }
+
+        Ok(assets)
+
+
     }
 
     pub fn trim_tail(&mut self, n: usize) {
