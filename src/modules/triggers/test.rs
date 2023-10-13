@@ -7,9 +7,9 @@ pub fn TEST_BUY() -> Trigger {
         return Ok(TriggerResponse{
             direction: "BUY".to_string(),
             symbol: Some(symbol.clone()),
-            id: Some("BUY".to_string()),
+            id: Some(format!("BUY {}", symbol.clone()).to_string()),
             origin: Some("Test BUY Trigger".to_string()),
-            description: None,
+            description: Some("test buy trigger".to_string()),
         });
     }
 
@@ -23,9 +23,9 @@ pub fn TEST_SELL() -> Trigger {
         return Ok(TriggerResponse{
             direction: "SELL".to_string(),
             symbol: Some(symbol.clone()),
-            id: Some("SELL".to_string()),
+            id: Some(format!("SELL {}", symbol.clone()).to_string()),
             origin: Some("Test SELL Trigger".to_string()),
-            description: None,
+            description: Some("test sell trigger".to_string()),
         });
     }
 

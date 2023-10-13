@@ -1,4 +1,5 @@
 mod modules;
+mod environment;
 
 use modules::transformers;
 use modules::triggers;
@@ -20,9 +21,6 @@ use crate::modules::triggers::test;
 struct Args {
     #[arg(short, long, default_value = "~/app/data/")]
     path: String,
-    // #[arg(short, long)]
-    // symbol: String
-
 }
 
 
@@ -103,7 +101,8 @@ fn main() {
     let test_sell = triggers::test::TEST_SELL();
 
     // NOTIFIER
-    let mut notifier= notifiers::print_notifier::PRINT();
+    // let mut notifier= notifiers::print_notifier::PRINT();
+    let mut notifier = notifiers::ntfy_notifier::NTFY();
     let _ = notifier
         .append_trigger(weekly_pivot_trigger)
         .append_trigger(test_buy)
@@ -117,6 +116,7 @@ fn main() {
     for mut asset in assets {
         asset.trim_tail(1); // cut off n rows from the tail
     
+
         let _ = asset.transformers 
             .append(sma_50.clone())
             .append(ema_50.clone())
@@ -130,6 +130,7 @@ fn main() {
 
         asset.apply_transformers();
         notifier.evaluate_triggers(&asset);
+
 
     }
 
