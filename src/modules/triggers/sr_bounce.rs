@@ -63,7 +63,7 @@ pub fn WEEKLY_PIVOT_BOUNCE() -> Trigger {
         let price_bands = vec![pivot_band, s1_band, s2_band, r1_band, r2_band];
 
         // Candle attributes
-        let candle_color: String = asset.get_value::<String>("candle_color", 1, true).unwrap();
+        // let candle_color: String = asset.get_value::<String>("candle_color", 1, true).unwrap();
         let pattern_score: f64 = asset.get_value::<f64>("candle_pattern_score", 1, true).unwrap();
 
         // BUY Indicators
