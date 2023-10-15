@@ -19,6 +19,7 @@ pub struct Asset {
 *****************************
 */
 
+#[allow(dead_code)]
 impl Asset {
     /***** UTILITY *****/
     fn new() -> Asset {
@@ -61,8 +62,6 @@ impl Asset {
         }
 
         Ok(assets)
-
-
     }
 
     pub fn trim_tail(&mut self, n: usize) {
@@ -141,15 +140,11 @@ impl Asset {
                 .apply(transformed_lf)
                 .unwrap();
         }
-        // for transformer in &self.transformers {
-        //     transformed_lf = transformer.apply(transformed_lf).unwrap();
-        // }
         self.df = Some(
             transformed_lf
                 .collect()
                 .expect("Failed transforation")
             );
-        self.extract_dtypes();
     }
 
     pub fn extract_dtypes(&mut self) {

@@ -1,60 +1,65 @@
 mod modules;
 mod environment;
 
+use std::{thread::sleep, time::{Duration, Instant}};
+use chrono::{Local, Timelike};
+use environment::env;
 use modules::transformers;
 use modules::triggers;
 use modules::notifiers;
-use modules::notifier::Notifier;
-use polars::prelude::*;
-use clap::Parser;
+// use modules::notifier::Notifier;
+// use polars::prelude::*;
 
 use modules::asset::Asset;
-use modules::chart;
+// use modules::chart;
 
-use crate::modules::data_transformer::DataTransformer;
-use crate::modules::transformers::pivot_points::WEEKLY_PIVOT_POINTS;
-use crate::modules::triggers::test;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    #[arg(short, long, default_value = "~/app/data/")]
-    path: String,
-}
+// use crate::modules::data_transformer::DataTransformer;
+// use crate::modules::transformers::pivot_points::WEEKLY_PIVOT_POINTS;
+// use crate::modules::triggers::test;
 
 
-
+#[allow(non_snake_case)]
 fn main() {
+    let environ = env(); 
+    let WATCH_DIR = environ.WATCH_DIR;
+    let ASSESSMENT_INTERVAL = environ.ASSESSMENT_INTERVAL;
+    println!("WATCHING: {WATCH_DIR}");
+    println!("ASSESSMENT_INTERVAL: {ASSESSMENT_INTERVAL}");
 
     // TRANSFORMERS
     let transformer_set = transformers::sets::tfs_001::SET_001();
 
     // TRIGGERS
     let weekly_pivot_trigger = triggers::sr_bounce::WEEKLY_PIVOT_BOUNCE();
-    let test_buy = triggers::test::TEST_BUY();
-    let test_sell = triggers::test::TEST_SELL();
+    // let test_buy = triggers::test::TEST_BUY();
+    // let test_sell = triggers::test::TEST_SELL();
 
     // NOTIFIER
     // let mut notifier= notifiers::print_notifier::PRINT();
     let mut notifier = notifiers::ntfy_notifier::NTFY();
     let _ = notifier
-        .append_trigger(weekly_pivot_trigger)
-        .append_trigger(test_buy)
-        .append_trigger(test_sell);
+        .append_trigger(weekly_pivot_trigger);
+        // .append_trigger(test_buy)
+        // .append_trigger(test_sell);
 
-    // ASSET INITIALIZATION
-    let cli_args = Args::parse();
-    let assets = Asset::from_csv_dir(cli_args.path).unwrap_or(Vec::new());
-    // let mut asset = Asset::from_csv("~/app/data/AUDUSD.csv".into(), Some("AUDUSD".into()));
+    loop {
+        let start_time = Instant::now();
 
-    for mut asset in assets {
-        asset.trim_tail(1); // cut off n rows from the tail
-        let _ = asset.transformers.append_transformer_set(transformer_set.clone());
+        let now = Local::now();
+        println!("\tAssessment Beginning - {:02}:{:02}:{:03}", now.minute(), now.second(), now.timestamp_subsec_millis());
+        let assets = Asset::from_csv_dir(WATCH_DIR.clone()).unwrap_or(Vec::new());
 
-        asset.apply_transformers();
-        notifier.evaluate_triggers(&asset);
+        for mut asset in assets {
+            asset.trim_tail(1); // cut off n rows from the tail
+            let _ = asset.transformers.append_transformer_set(transformer_set.clone());
+            asset.apply_transformers();
+            notifier.evaluate_triggers(&asset);
+        }
 
-
+        let elapsed_time = start_time.elapsed();
+        println!("\t\tCompleted in: {}.{} seconds", elapsed_time.as_secs(), elapsed_time.subsec_millis());
+        let sleep_duration = std::cmp::max(Duration::from_secs(ASSESSMENT_INTERVAL) - elapsed_time, Duration::from_secs(1));
+        sleep(sleep_duration);
     }
 
 
