@@ -1,0 +1,26 @@
+FROM rust:buster
+
+RUN apt update && apt-get install -y \
+    sudo \
+    curl \
+    vim
+
+ARG UID=1000
+ARG GID=1000
+ARG USERNAME=user
+
+# Create a new user with the provided UID and GID
+RUN groupadd -g $GID user && \
+    useradd -m -u $UID -g $GID -s /bin/bash $USERNAME
+
+RUN usermod -aG sudo $USERNAME
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER $USERNAME
+
+WORKDIR /home/$USERNAME/app/
+RUN sudo chown -R $(id -u):$(id -g) /home/$USERNAME/
+
+COPY . /home/$USERNAME/app/
+RUN cargo build --release
+
+CMD ["./target/release/tr8tr"]
